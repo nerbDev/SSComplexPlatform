@@ -78,7 +78,7 @@ class DashboardController extends Controller
 
         $rows = DB::table('appointments')
             ->where('user_id', Auth::id())
-            ->orderByDesc('scheduled_date')
+            ->orderByDesc('event_date')
             ->orderByDesc('start_time')
             ->limit(50)
             ->get();
@@ -96,7 +96,7 @@ class DashboardController extends Controller
             ];
 
             $dateTime = trim(
-                (isset($row->scheduled_date) ? Carbon::parse($row->scheduled_date)->format('M j, Y') : '') .
+                (isset($row->event_date) ? Carbon::parse($row->event_date)->format('M j, Y') : '') .
                 (isset($row->start_time) ? ' · ' . Carbon::parse($row->start_time)->format('g:i A') : '')
             );
 

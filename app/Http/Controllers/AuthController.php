@@ -66,11 +66,11 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
-            'first_name'    => ['required', 'string', 'max:255'],
-            'last_name'     => ['required', 'string', 'max:255'],
+            'first_name'    => ['required','string','max:255','regex:/^[\pL\s\'-]+$/u',],
+            'last_name'     => ['required','string','max:255','regex:/^[\pL\s\'-]+$/u',],
             'email'         => ['required', 'email', 'unique:users,email'],
-            'phone_number'  => ['nullable', 'string', 'max:20'],
-            'password'      => ['required', 'string', 'min:8', 'confirmed'],
+            'phone_number'  => ['required|digits:11'],
+            'password'      => ['required|string|min:8|confirmed'],
         ]);
 
         if ($validator->fails()) {

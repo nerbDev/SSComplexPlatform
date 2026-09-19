@@ -268,6 +268,7 @@
         <div class="nav-section-label">NAVIGATION</div>
         <nav class="nav">
             <a class="nav-item {{ request()->routeIs('client.dashboard') ? 'active' : '' }}" href="{{ route('client.dashboard') }}"><span class="ic">▦</span> Dashboard</a>
+            <a class="nav-item {{ request()->routeIs('client.reservations*') ? 'active' : '' }}" href="{{ route('client.reservations.create') }}"><span class="ic">➕</span> New Reservation</a>
             <a class="nav-item {{ request()->routeIs('client.appointments*') ? 'active' : '' }}" href="#"><span class="ic">📅</span> Appointments</a>
         </nav>
     </div>

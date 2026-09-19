@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PosterController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
+use App\Http\Controllers\Client\ReservationController;
 
 // route to view admin dashboard
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -16,8 +17,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     ->except(['show', 'create', 'edit']); // index, store, update, destroy — edit/add happen in modals on the index page
 });
 
-Route::middleware(['auth'])->prefix('client')->name('client.')->group(function () {
+Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->group(function () {
     Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+ 
+    Route::get('/reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
+    Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+ 
+    // Placeholder — the sidebar already links to this via routeIs('client.appointments*'),
+    // build the actual appointments list/booking flow next and swap this in.
+    // Route::get('/appointments', [ClientAppointmentController::class, 'index'])->name('appointments.index');
 });
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');

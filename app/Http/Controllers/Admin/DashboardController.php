@@ -104,12 +104,12 @@ class DashboardController extends Controller
         $series = [];
         for ($d = $startOfWeek->copy(); $d->lte($endOfWeek); $d->addDay()) {
             $series[] = DB::table('appointments')
-                ->whereDate('scheduled_date', $d->toDateString())
+                ->whereDate('event_date', $d->toDateString())
                 ->count();
         }
 
         $prevWeekTotal = DB::table('appointments')
-            ->whereBetween('scheduled_date', [
+            ->whereBetween('event_date', [
                 $startOfWeek->copy()->subWeek()->toDateString(),
                 $endOfWeek->copy()->subWeek()->toDateString(),
             ])->count();
@@ -133,7 +133,7 @@ class DashboardController extends Controller
         foreach ($labels as $i => $label) {
             $date = $startOfWeek->copy()->addDays($i);
             $count = $hasAppointments
-                ? DB::table('appointments')->whereDate('scheduled_date', $date->toDateString())->count()
+                ? DB::table('appointments')->whereDate('event_date', $date->toDateString())->count()
                 : 0;
 
             $days[] = [
@@ -155,7 +155,7 @@ class DashboardController extends Controller
 
         $rows = DB::table('appointments')
             ->join('users', 'users.id', '=', 'appointments.user_id')
-            ->whereDate('scheduled_date', Carbon::today()->toDateString())
+            ->whereDate('event_date', Carbon::today()->toDateString())
             ->orderBy('start_time')
             ->select(
                 'appointments.start_time',
@@ -200,11 +200,11 @@ class DashboardController extends Controller
         $endOfWeek = Carbon::now()->endOfWeek();
 
         $paid = DB::table('appointments')
-            ->whereBetween('scheduled_date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
+            ->whereBetween('event_date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
             ->where('track', 'paid')->count();
 
         $freeUse = DB::table('appointments')
-            ->whereBetween('scheduled_date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
+            ->whereBetween('event_date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
             ->where('track', 'free_use')->count();
 
         $total = $paid + $freeUse;
@@ -233,7 +233,7 @@ class DashboardController extends Controller
             if ($hasAppointments) {
                 $bookedHours = DB::table('appointments')
                     ->where('function_unit', $unit['name'])
-                    ->whereDate('scheduled_date', Carbon::today()->toDateString())
+                    ->whereDate('event_date', Carbon::today()->toDateString())
                     ->whereIn('status', ['confirmed', 'completed'])
                     ->get(['start_time', 'end_time'])
                     ->sum(fn($row) => Carbon::parse($row->start_time)->diffInHours(Carbon::parse($row->end_time)));
