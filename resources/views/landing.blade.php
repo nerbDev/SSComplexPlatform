@@ -223,12 +223,33 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     opacity: 0.5;
 }
 
-.ssc-hero__content {
+/* wraps text + carousel side by side; falls back to a single centered
+   column (original behaviour) when there are no posters */
+.ssc-hero__inner {
     position: relative;
     z-index: 2;
-    max-width: 42rem;
-    padding: 0 1.75rem;
+    width: 100%;
     margin: 0 auto;
+    padding: 0 1.75rem;
+}
+
+.ssc-hero__inner:not(.has-carousel) {
+    max-width: 42rem;
+}
+
+.ssc-hero__inner.has-carousel {
+    max-width: 1400px;
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+}
+
+.ssc-hero__inner.has-carousel .ssc-hero__content {
+    flex: 0 0 40%;
+    max-width: 40%;
+}
+
+.ssc-hero__content {
     width: 100%;
 }
 
@@ -253,6 +274,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     color: rgba(255, 255, 255, 0.78);
     max-width: 34rem;
     margin-bottom: 2rem;
+}
+
+.ssc-hero__inner.has-carousel .ssc-hero__sub {
+    max-width: none;
 }
 
 .ssc-hero__actions {
@@ -283,6 +308,154 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     border: 1px solid rgba(255, 255, 255, 0.4);
 }
 .ssc-btn--ghost:hover { border-color: #fff; transform: translateY(-1px); }
+
+/* ---------- Hero poster carousel (only rendered when $posters isn't empty) ---------- */
+.ssc-hero__carousel-wrap {
+    flex: 0 0 56%;
+    max-width: 56%;
+}
+
+.ssc-hero-carousel {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+}
+
+.ssc-hero-carousel__track {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 0.5rem 0.25rem 1rem;
+    scrollbar-width: none;
+    flex: 1;
+    min-width: 0;
+}
+
+.ssc-hero-carousel__track::-webkit-scrollbar { display: none; }
+
+.ssc-hero-carousel__slide {
+    flex: 0 0 auto;
+    width: min(72%, 300px);
+    scroll-snap-align: center;
+    perspective: 1600px;
+}
+
+/* flip / morph card: front = poster image, back = event detail box */
+.flip-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    cursor: pointer;
+}
+
+.flip-card__inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(.4, .2, .2, 1);
+}
+
+.flip-card.is-flipped .flip-card__inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card__front,
+.flip-card__back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 16px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+}
+
+.flip-card__front {
+    background-size: cover;
+    background-position: center;
+    background-color: var(--court-navy-2);
+    display: flex;
+    align-items: flex-end;
+}
+
+.flip-card__front::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to top, rgba(11, 27, 44, 0.82), transparent 48%);
+}
+
+.flip-card__hint {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #fff;
+}
+
+.flip-card__back {
+    transform: rotateY(180deg);
+    background: var(--court-navy);
+    color: #fff;
+    padding: 1.5rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.flip-card__status {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    margin-bottom: 0.9rem;
+}
+
+.flip-card__status.status-open    { background: rgba(74, 222, 128, 0.16); color: #4ade80; }
+.flip-card__status.status-full    { background: rgba(226, 96, 58, 0.2);   color: var(--coral); }
+.flip-card__status.status-ongoing { background: rgba(201, 132, 63, 0.22); color: var(--amber); }
+
+.flip-card__back h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.65rem;
+}
+
+.flip-card__meta {
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 0.35rem;
+}
+
+.flip-card__desc {
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 0.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.flip-card__close {
+    align-self: flex-start;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--amber);
+    padding-bottom: 0.15rem;
+    border-bottom: 1px solid rgba(201, 132, 63, 0.45);
+}
 
 /* ==========================================================================
    Section 2 — Facilities carousel
@@ -384,6 +557,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     transform: translateY(-1px);
 }
 
+/* on the dark hero, the arrows need to read against navy, not white-on-paper */
+.ssc-hero-carousel .ssc-carousel__arrow {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.ssc-hero-carousel .ssc-carousel__arrow:hover {
+    background: var(--coral);
+    border-color: var(--coral);
+    color: #fff;
+}
+
 .ssc-carousel__dots {
     display: flex;
     justify-content: center;
@@ -402,6 +588,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .ssc-carousel__dot.is-active {
     background: var(--coral);
     transform: scale(1.3);
+}
+
+.ssc-hero-carousel__dots .ssc-carousel__dot {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.ssc-hero-carousel__dots .ssc-carousel__dot.is-active {
+    background: var(--amber);
 }
 
 /* ==========================================================================
@@ -520,6 +714,31 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* ==========================================================================
    Responsive
    ========================================================================== */
+@media (max-width: 860px) {
+    .ssc-hero { overflow-y: auto; justify-content: flex-start; }
+
+    .ssc-hero__inner.has-carousel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.75rem;
+        padding-top: 6rem;
+        padding-bottom: 2.5rem;
+    }
+
+    .ssc-hero__inner.has-carousel .ssc-hero__content {
+        flex: none;
+        max-width: 100%;
+    }
+
+    .ssc-hero__carousel-wrap {
+        flex: none;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .ssc-hero-carousel__slide { width: min(70vw, 280px); }
+}
+
 @media (max-width: 720px) {
     .ssc-nav__toggle { display: flex; }
 
@@ -611,18 +830,70 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         <section class="ssc-section ssc-hero" id="home" data-index="01">
             <div class="ssc-hero__photo" style="background-image:url('{{ asset($heroImage ?? '') }}')" aria-hidden="true"></div>
             <div class="ssc-hero__bg" aria-hidden="true"></div>
-            <div class="ssc-hero__content">
-                <p class="ssc-hero__kicker">Wawandue, Subic, Zambales</p>
-                <h1 class="ssc-hero__title">Book Subic Sports Complex<br>without the runaround.</h1>
-                <p class="ssc-hero__sub">
-                    Reserve Function 1, Function 2, Function 3, or the Lobby and Whole Court online.
-                    Check real-time availability, submit your request, and follow it through approval —
-                    no more shuttling between the complex and the municipal office.
-                </p>
-                <div class="ssc-hero__actions">
-                    <a href="#" class="ssc-btn ssc-btn--primary">Start a Booking</a>
-                    <button class="ssc-btn ssc-btn--ghost" data-target="facilities">See what's inside</button>
+
+            <div class="ssc-hero__inner {{ !empty($posters) ? 'has-carousel' : '' }}">
+
+                <div class="ssc-hero__content">
+                    <p class="ssc-hero__kicker">Wawandue, Subic, Zambales</p>
+                    <h1 class="ssc-hero__title">Book Subic Sports Complex<br>without the runaround.</h1>
+                    <p class="ssc-hero__sub">
+                        Reserve Function 1, Function 2, Function 3, or the Lobby and Whole Court online.
+                        Check real-time availability, submit your request, and follow it through approval —
+                        no more shuttling between the complex and the municipal office.
+                    </p>
+                    <div class="ssc-hero__actions">
+                        <a href="#" class="ssc-btn ssc-btn--primary">Start a Booking</a>
+                        <button class="ssc-btn ssc-btn--ghost" data-target="facilities">See what's inside</button>
+                    </div>
                 </div>
+
+                @if(!empty($posters))
+                    <div class="ssc-hero__carousel-wrap">
+                        <div class="ssc-hero-carousel">
+                            <button class="ssc-carousel__arrow" id="heroCarouselPrev" aria-label="Previous poster">‹</button>
+
+                            <ul class="ssc-hero-carousel__track" id="heroCarouselTrack">
+                                @foreach ($posters as $poster)
+                                    <li class="ssc-hero-carousel__slide">
+                                        <div class="flip-card">
+                                            <div class="flip-card__inner">
+                                                <div
+                                                    class="flip-card__front"
+                                                    style="background-image:url('{{ asset($poster['image']) }}')"
+                                                    role="button"
+                                                    tabindex="0"
+                                                    aria-label="View details for {{ $poster['title'] ?? 'this event' }}"
+                                                >
+                                                    <span class="flip-card__hint">Tap for details</span>
+                                                </div>
+                                                <div class="flip-card__back" role="button" tabindex="0" aria-label="Back to poster">
+                                                    <span class="flip-card__status status-{{ strtolower($poster['status'] ?? 'open') }}">
+                                                        {{ $poster['status'] ?? 'Open' }}
+                                                    </span>
+                                                    <h3>{{ $poster['title'] ?? 'Untitled event' }}</h3>
+                                                    @if(!empty($poster['date']) || !empty($poster['time']))
+                                                        <p class="flip-card__meta">📅 {{ $poster['date'] ?? '' }}@if(!empty($poster['time'])) · {{ $poster['time'] }}@endif</p>
+                                                    @endif
+                                                    @if(!empty($poster['unit']))
+                                                        <p class="flip-card__meta">📍 {{ $poster['unit'] }}</p>
+                                                    @endif
+                                                    @if(!empty($poster['description']))
+                                                        <p class="flip-card__desc">{{ $poster['description'] }}</p>
+                                                    @endif
+                                                    <span class="flip-card__close">Back to poster</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+
+                            <button class="ssc-carousel__arrow" id="heroCarouselNext" aria-label="Next poster">›</button>
+                        </div>
+                        <div class="ssc-carousel__dots ssc-hero-carousel__dots" id="heroCarouselDots"></div>
+                    </div>
+                @endif
+
             </div>
         </section>
 
@@ -782,16 +1053,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
         sections.forEach((section) => sectionObserver.observe(section));
 
-// carousel
-        const track = document.getElementById('carouselTrack');
-        const prev  = document.getElementById('carouselPrev');
-        const next  = document.getElementById('carouselNext');
-        const dotsWrap = document.getElementById('carouselDots');
+        // ---------------------------------------------------------------
+        // Reusable horizontal carousel (dots + prev/next), used by both
+        // the facilities carousel and the hero poster carousel.
+        // ---------------------------------------------------------------
+        function initCarousel({ trackId, prevId, nextId, dotsId }) {
+            const track = document.getElementById(trackId);
+            if (!track) return null;
 
-        if (track) {
+            const prev = document.getElementById(prevId);
+            const next = document.getElementById(nextId);
+            const dotsWrap = document.getElementById(dotsId);
             const slides = Array.from(track.children);
 
-            // Build dot indicators, one per slide
             slides.forEach((_, i) => {
                 const dot = document.createElement('button');
                 dot.className = 'ssc-carousel__dot';
@@ -828,8 +1102,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
                 slides[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }
 
-            prev.addEventListener('click', () => scrollByStep(-1));
-            next.addEventListener('click', () => scrollByStep(1));
+            if (prev) prev.addEventListener('click', () => scrollByStep(-1));
+            if (next) next.addEventListener('click', () => scrollByStep(1));
 
             let scrollTimeout;
             track.addEventListener('scroll', () => {
@@ -838,6 +1112,47 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
             });
 
             setActiveDot(0);
+
+            return { track, slides };
+        }
+
+        // facilities carousel
+        initCarousel({
+            trackId: 'carouselTrack',
+            prevId: 'carouselPrev',
+            nextId: 'carouselNext',
+            dotsId: 'carouselDots',
+        });
+
+        // hero poster carousel + flip-to-details behaviour
+        const heroCarousel = initCarousel({
+            trackId: 'heroCarouselTrack',
+            prevId: 'heroCarouselPrev',
+            nextId: 'heroCarouselNext',
+            dotsId: 'heroCarouselDots',
+        });
+
+        if (heroCarousel) {
+            heroCarousel.slides.forEach((slide) => {
+                const card = slide.querySelector('.flip-card');
+                if (!card) return;
+
+                const front = card.querySelector('.flip-card__front');
+                const back = card.querySelector('.flip-card__back');
+
+                const toggle = () => card.classList.toggle('is-flipped');
+                const onKey = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggle();
+                    }
+                };
+
+                front.addEventListener('click', toggle);
+                front.addEventListener('keydown', onKey);
+                back.addEventListener('click', toggle);
+                back.addEventListener('keydown', onKey);
+            });
         }
     });
 
