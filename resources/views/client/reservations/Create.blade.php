@@ -4,7 +4,7 @@
 
 @push('styles')
 <style>
-    .wizard{max-width:760px;margin:0 auto;}
+    .wizard{max-width:780px;margin:0 auto;}
     .wizard-steps{display:flex;gap:8px;margin-bottom:22px;}
     .wizard-step-dot{
         flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.35);
@@ -34,15 +34,47 @@
     }
     .field-error{color:var(--orange-500);font-size:11.5px;font-weight:700;margin-top:5px;}
 
+    /* ---------- booking type ---------- */
+    .type-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:18px;}
+    @media (max-width:820px){ .type-grid{grid-template-columns:1fr 1fr;} }
+    @media (max-width:600px){ .type-grid{grid-template-columns:1fr;} }
+    .type-option{
+        border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;
+        background:rgba(255,255,255,.55);transition:border-color .15s ease, background .15s ease;
+    }
+    .type-option.selected{border-color:var(--green-600);background:rgba(232,247,239,.85);}
+    .type-option .t-name{font-weight:800;font-size:14px;margin-bottom:6px;}
+    .type-option .t-desc{font-size:12px;color:var(--ink-600);line-height:1.55;}
+    .type-option .t-desc li{margin-bottom:3px;}
+    .type-option .t-desc ul{margin:0;padding-left:16px;}
+
+    /* ---------- facility cards ---------- */
     .facility-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
     @media (max-width:600px){ .facility-grid{grid-template-columns:1fr;} }
     .facility-option{
         border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;
         background:rgba(255,255,255,.55);transition:border-color .15s ease, background .15s ease;
+        position:relative;
     }
     .facility-option.selected{border-color:var(--green-600);background:rgba(232,247,239,.85);}
-    .facility-option .f-name{font-weight:800;font-size:13.5px;}
+    .facility-option .f-name{font-weight:800;font-size:13.5px;padding-right:70px;}
     .facility-option .f-cap{font-size:11.5px;color:var(--ink-400);margin-top:2px;}
+    .see-details-btn{
+        position:absolute;top:12px;right:12px;font-size:11px;font-weight:700;
+        padding:5px 10px;border-radius:999px;border:1px solid var(--green-600);
+        color:var(--green-700);background:#fff;cursor:pointer;
+    }
+    .see-details-btn:hover{background:var(--green-050);}
+
+    /* ---------- room details modal ---------- */
+    .room-modal-photo{
+        width:100%;height:170px;border-radius:12px;background-size:cover;background-position:center;
+        background-color:var(--green-100);margin-bottom:14px;
+    }
+    .room-modal-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);}
+    .room-modal-row:last-child{border-bottom:none;}
+    .room-modal-row .rm-label{color:var(--ink-400);font-weight:600;}
+    .room-modal-row .rm-value{font-weight:700;}
 
     .aircon-toggle{display:flex;gap:10px;margin-bottom:14px;}
     .aircon-toggle label{
@@ -50,7 +82,6 @@
         font-size:12.5px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.55);
     }
     .aircon-toggle input{display:none;}
-    .aircon-toggle input:checked + span{color:var(--green-700);}
     .aircon-toggle label:has(input:checked){border-color:var(--green-600);background:rgba(232,247,239,.85);}
 
     .rate-modes{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
@@ -60,9 +91,22 @@
         background:rgba(255,255,255,.55);
     }
     .rate-mode.selected{border-color:var(--green-600);background:rgba(232,247,239,.85);}
-    .rate-mode.disabled{opacity:.4;cursor:not-allowed;}
     .rate-mode .rm-label{font-size:13px;font-weight:700;}
     .rate-mode .rm-price{font-size:12.5px;font-weight:700;color:var(--green-700);}
+
+    /* ---------- availability panel ---------- */
+    .availability-panel{
+        border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;
+        border:1px solid var(--line);background:rgba(255,255,255,.55);display:none;
+    }
+    .availability-panel.show{display:block;}
+    .availability-panel.blocked{background:rgba(180,80,44,.1);border-color:rgba(180,80,44,.35);color:#a04a26;}
+    .availability-panel .av-title{font-weight:700;margin-bottom:6px;}
+    .busy-chip{
+        display:inline-block;margin:3px 6px 0 0;padding:4px 9px;border-radius:999px;
+        background:var(--orange-100);color:#a85b1f;font-weight:700;font-size:11.5px;
+    }
+    .availability-panel.ok{background:rgba(31,174,116,.08);border-color:rgba(31,174,116,.3);color:var(--green-700);}
 
     .summary-box{
         background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:12px;
@@ -85,6 +129,9 @@
     .commitment-box h4:first-child{margin-top:0;}
     .commitment-box ul{margin:0 0 8px 18px;padding:0;}
     .commitment-box li{margin-bottom:4px;}
+    .commitment-box [data-type-block]{display:none;}
+    .commitment-box [data-type-block].show{display:block;}
+
     .ack-row{
         display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:13px 14px;
         background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:10px;
@@ -99,7 +146,13 @@
     }
     .wizard-nav button.primary{background:var(--green-600);border-color:var(--green-600);color:#fff;}
     .wizard-nav button.primary:disabled{background:var(--ink-400);border-color:var(--ink-400);cursor:not-allowed;}
-    .wizard-nav button:only-child{margin-left:auto;}
+
+    /* generic modal (room details) */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(7,35,26,.55);align-items:center;justify-content:center;z-index:300;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal-box{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:400px;padding:22px;box-shadow:0 24px 60px -20px rgba(7,35,26,.4);}
+    .modal-box .modal-title{font-size:16px;font-weight:800;margin-bottom:14px;}
+    .modal-close-btn{width:100%;margin-top:16px;padding:11px 0;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;border:1px solid var(--line);background:var(--green-050);}
 </style>
 @endpush
 
@@ -116,26 +169,61 @@
         <div class="wizard-step-dot active" data-dot="1"></div>
         <div class="wizard-step-dot" data-dot="2"></div>
         <div class="wizard-step-dot" data-dot="3"></div>
-        <div class="wizard-step-dot" data-dot="4"></div>
     </div>
     <div class="wizard-labels">
         <span class="active" data-label="1">Person Details</span>
         <span data-label="2">Room & Billing</span>
-        <span data-label="3">Payment</span>
-        <span data-label="4">Commitment Form</span>
+        <span data-label="3">Commitment Form</span>
     </div>
 
     <form method="POST" action="{{ route('client.reservations.store') }}" id="reservationForm">
         @csrf
 
-        {{-- ================= STEP 1: PERSON DETAILS ================= --}}
+        {{-- ================= STEP 1: PERSON DETAILS + BOOKING TYPE ================= --}}
         <div class="step-panel active card" data-step="1">
-            <div class="card-title" style="margin-bottom:16px;">Who's this reservation for?</div>
+            <div class="card-title" style="margin-bottom:12px;">What kind of booking is this?</div>
+
+            <div class="type-grid">
+                <div class="type-option" data-type="appointment">
+                    <div class="t-name">Appointment</div>
+                    <div class="t-desc">
+                        <ul>
+                            <li>Full payment upfront</li>
+                            <li>10% fee if rescheduled</li>
+                            <li>Ingress fees apply</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="type-option" data-type="room_reservation">
+                    <div class="t-name">Room Reservation</div>
+                    <div class="t-desc">
+                        <ul>
+                            <li>For events booked far in advance</li>
+                            <li>{{ $roomReservationDownpaymentPercent }}% downpayment now</li>
+                            <li>Remaining balance due {{ $balanceDueDaysBefore }} days before the event</li>
+                            <li>Same room rates, 10% rescheduling fee</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="type-option" data-type="free_use">
+                    <div class="t-name">Free Use</div>
+                    <div class="t-desc">
+                        <ul>
+                            <li>No payment required</li>
+                            <li>Must be qualified for free use</li>
+                            <li>Approval form from Subic Administration Office, with Mayor's approval</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="booking_type" id="bookingTypeInput">
+
+            <div class="card-title" style="margin-bottom:16px;">Who's this booking for?</div>
 
             <div class="field-row">
                 <div class="field full">
                     <label>Full Name</label>
-                    <input type="text" name="full_name" value="{{ old('full_name', auth()->user()->first_name . ' ' . auth()->user()->last_name ?? '') }}" required>
+                    <input type="text" name="full_name" value="{{ old('full_name', trim((auth()->user()->first_name ?? '') . ' ' . (auth()->user()->last_name ?? ''))) }}" required>
                 </div>
                 <div class="field">
                     <label>Contact Number</label>
@@ -162,6 +250,7 @@
 
             <div class="facility-grid" id="facilityGrid"></div>
             <input type="hidden" name="facility_id" id="facilityIdInput">
+            <input type="hidden" name="rate_type" id="rateTypeInput">
 
             <div class="aircon-toggle" id="airconToggle" style="display:none;">
                 <label><input type="radio" name="aircon" value="1"><span>With aircon</span></label>
@@ -184,41 +273,27 @@
                 </div>
             </div>
 
-            <div class="rate-modes" id="rateModes"></div>
+            <div class="availability-panel" id="availabilityPanel"></div>
 
-            <div class="summary-box">
-                <div class="summary-row"><span class="muted-label">Room rate</span><span id="sumBase">₱0.00</span></div>
-                <div class="summary-row"><span class="muted-label">Ingress (before event)</span><span id="sumIngressBefore">₱0.00</span></div>
-                <div class="summary-row"><span class="muted-label">Ingress (after event)</span><span id="sumIngressAfter">₱0.00</span></div>
-                <div class="summary-row total"><span>Total</span><span id="sumTotal">₱0.00</span></div>
-                <div class="note-chip">Ingress fees aren't priced yet — currently ₱0, will be added here once confirmed. A 10% additional fee applies if you reschedule this reservation.</div>
-            </div>
-        </div>
+            <div id="billingSection">
+                <div class="rate-modes" id="rateModes"></div>
 
-        {{-- ================= STEP 3: PAYMENT ================= --}}
-        <div class="step-panel card" data-step="3">
-            <div class="card-title" style="margin-bottom:16px;">Downpayment</div>
-
-            <div class="summary-box">
-                <div class="summary-row"><span class="muted-label">Total reservation cost</span><span id="paySumTotal">₱0.00</span></div>
-                <div class="summary-row total"><span>Downpayment ({{ $downpaymentPercent }}%)</span><span id="paySumDownpayment">₱0.00</span></div>
-                <div class="summary-row"><span class="muted-label">Remaining balance</span><span id="paySumBalance">₱0.00</span></div>
-            </div>
-
-            <div class="note-chip">
-                GCash payment collection isn't wired up in the system yet — for now, send your {{ $downpaymentPercent }}% downpayment via GCash and enter the reference number below. Staff will verify it manually.
-            </div>
-
-            <div class="field-row" style="margin-top:14px;">
-                <div class="field full">
-                    <label>GCash Reference Number</label>
-                    <input type="text" name="gcash_reference" value="{{ old('gcash_reference') }}" placeholder="e.g. 1234567890123">
+                <div class="summary-box">
+                    <div class="summary-row"><span class="muted-label">Room rate</span><span id="sumBase">₱0.00</span></div>
+                    <div class="summary-row"><span class="muted-label">Ingress (before event)</span><span id="sumIngressBefore">₱0.00</span></div>
+                    <div class="summary-row"><span class="muted-label">Ingress (after event)</span><span id="sumIngressAfter">₱0.00</span></div>
+                    <div class="summary-row total"><span>Total</span><span id="sumTotal">₱0.00</span></div>
+                    <div class="note-chip">Ingress fees aren't priced yet — currently ₱0, will be added here once confirmed. A 10% additional fee applies if you reschedule.</div>
                 </div>
             </div>
+
+            <div class="note-chip" id="freeUseNote" style="display:none;">
+                Free Use bookings don't require any payment — just pick a room, date, and time. Once Staff verifies your request, you'll be asked to attach your approval form.
+            </div>
         </div>
 
-        {{-- ================= STEP 4: COMMITMENT FORM ================= --}}
-        <div class="step-panel card" data-step="4">
+        {{-- ================= STEP 3: COMMITMENT FORM ================= --}}
+        <div class="step-panel card" data-step="3">
             <div class="card-title" style="margin-bottom:16px;">Digital Commitment Form</div>
 
             <div class="commitment-box">
@@ -240,22 +315,37 @@
                     <li>No nailing, taping, or otherwise damaging walls, floors, fixtures, or equipment.</li>
                 </ul>
 
-                <h4>3. Payment & Downpayment</h4>
-                <ul>
-                    <li>A downpayment of <strong>{{ $downpaymentPercent }}%</strong> of the total cost is required to confirm this reservation.</li>
-                    <li>The remaining balance is due on or before the event date, as coordinated with SSC staff.</li>
-                    <li>Ingress fees (before/after the event) are currently unpriced and will be communicated separately once confirmed by the Municipality.</li>
-                </ul>
+                <h4>3. Payment</h4>
+                <div data-type-block="appointment">
+                    <ul>
+                        <li>Appointments require <strong>full payment upfront</strong> to confirm the booking.</li>
+                        <li>Ingress fees (before/after the event) are currently unpriced and will be communicated separately once confirmed by the Municipality.</li>
+                    </ul>
+                </div>
+                <div data-type-block="room_reservation">
+                    <ul>
+                        <li>Room Reservations require a <strong>{{ $roomReservationDownpaymentPercent }}% downpayment</strong> now to confirm the booking.</li>
+                        <li>The remaining balance must be settled at least <strong>{{ $balanceDueDaysBefore }} days before the event date</strong>. Unpaid balances past this deadline may result in cancellation.</li>
+                        <li>Ingress fees (before/after the event) are currently unpriced and will be communicated separately once confirmed by the Municipality.</li>
+                    </ul>
+                </div>
+                <div data-type-block="free_use">
+                    <ul>
+                        <li><strong>No payment is required</strong> for Free Use bookings.</li>
+                        <li>You must be qualified for free use of the facility.</li>
+                        <li>An approval form from the Subic Administration Office, with the Mayor's approval, must be attached once Staff verifies this request.</li>
+                    </ul>
+                </div>
 
                 <h4>4. Cancellation Policy</h4>
                 <ul>
                     <li>Cancellations are <strong>non-refundable</strong> — {{ $cancellationRefundPercent }}% of any amount paid will be returned.</li>
-                    <li>This applies to both the downpayment and any additional payments already made.</li>
+                    <li>This applies to both the downpayment/full payment and any additional payments already made.</li>
                 </ul>
 
                 <h4>5. Rescheduling Policy</h4>
                 <ul>
-                    <li>Rescheduling this reservation to a new date incurs an <strong>additional {{ $reschedulingFeePercent }}%</strong> fee on top of the total reservation cost.</li>
+                    <li>Rescheduling to a new date incurs an <strong>additional {{ $reschedulingFeePercent }}%</strong> fee on top of the total cost.</li>
                     <li>Rescheduling is subject to the new date's availability and is not guaranteed.</li>
                     <li>Repeated rescheduling requests may be declined at SSC's discretion.</li>
                 </ul>
@@ -271,22 +361,34 @@
 
             <div class="ack-row">
                 <input type="checkbox" id="commitmentCheckbox" name="commitment_acknowledged" value="1" required>
-                <label for="commitmentCheckbox">I have read, understood, and agree to the terms above — including the non-refundable cancellation policy and the 10% additional rescheduling fee.</label>
+                <label for="commitmentCheckbox">I have read, understood, and agree to the terms above.</label>
             </div>
         </div>
 
         <div class="wizard-nav">
             <button type="button" id="backBtn" style="display:none;">Back</button>
             <button type="button" id="nextBtn" class="primary">Next</button>
-            <button type="submit" id="submitBtn" class="primary" style="display:none;" disabled>Submit Reservation</button>
+            <button type="submit" id="submitBtn" class="primary" style="display:none;" disabled>Submit</button>
         </div>
     </form>
+</div>
+
+{{-- room details modal --}}
+<div class="modal-overlay" id="roomDetailsModal">
+    <div class="modal-box">
+        <div class="modal-title" id="rmName">Room name</div>
+        <div class="room-modal-photo" id="rmPhoto"></div>
+        <div class="room-modal-row"><span class="rm-label">Max Capacity</span><span class="rm-value" id="rmCapacity">—</span></div>
+        <div class="room-modal-row"><span class="rm-label">Location</span><span class="rm-value" id="rmLocation">—</span></div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('roomDetailsModal')">Close</button>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
     const FACILITIES = @json($facilities);
+    const AVAILABILITY_URL = @json(route('client.reservations.availability'));
     const RATE_LABELS = {
         first_3_hours: 'First 3 hours',
         succeeding_hour: 'Succeeding hour',
@@ -294,10 +396,17 @@
         per_hour: 'Per hour',
     };
 
+    function openModal(id){ document.getElementById(id).classList.add('show'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+
     let currentStep = 1;
-    const totalSteps = 4;
+    const totalSteps = 3;
     let selectedFacility = null;
     let selectedRateType = null;
+    let selectedBookingType = null;
+    let busyRanges = [];
+    let wholeDayBlocked = false;
 
     const dots = document.querySelectorAll('.wizard-step-dot');
     const labels = document.querySelectorAll('.wizard-labels span');
@@ -319,7 +428,7 @@
         nextBtn.style.display = step === totalSteps ? 'none' : 'inline-block';
         submitBtn.style.display = step === totalSteps ? 'inline-block' : 'none';
 
-        if (step === 3) updatePaymentSummary();
+        if (step === 3) updateCommitmentBlocks();
     }
 
     function validateStep(step) {
@@ -328,9 +437,24 @@
         for (const input of inputs) {
             if (!input.reportValidity()) return false;
         }
-        if (step === 2 && (!selectedFacility || !selectedRateType)) {
-            alert('Please select a facility and a mode of rent.');
+        if (step === 1 && !selectedBookingType) {
+            alert('Please choose Appointment, Room Reservation, or Free Use.');
             return false;
+        }
+        if (step === 2) {
+            const isFreeUse = selectedBookingType === 'free_use';
+            if (!selectedFacility || (!isFreeUse && !selectedRateType)) {
+                alert(isFreeUse ? 'Please select a facility.' : 'Please select a facility and a mode of rent.');
+                return false;
+            }
+            if (wholeDayBlocked) {
+                alert('This facility is not available on the selected date.');
+                return false;
+            }
+            if (hasTimeConflict()) {
+                alert('Your selected time overlaps with an existing booking. Please choose a different time.');
+                return false;
+            }
         }
         return true;
     }
@@ -346,23 +470,67 @@
         submitBtn.disabled = !this.checked;
     });
 
+    // ---------------- booking type ----------------
+    document.querySelectorAll('.type-option').forEach(el => {
+        el.addEventListener('click', () => {
+            selectedBookingType = el.dataset.type;
+            document.getElementById('bookingTypeInput').value = selectedBookingType;
+            document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            updateStep2Visibility();
+        });
+    });
+
+    // free_use skips billing entirely — Step 2 becomes just "pick a room, date, time"
+    function updateStep2Visibility() {
+        const isFreeUse = selectedBookingType === 'free_use';
+        document.getElementById('billingSection').style.display = isFreeUse ? 'none' : 'block';
+        document.getElementById('freeUseNote').style.display = isFreeUse ? 'block' : 'none';
+        if (isFreeUse) {
+            airconToggle.style.display = 'none';
+        }
+    }
+
     // ---------------- facility grid ----------------
     const facilityGrid = document.getElementById('facilityGrid');
     const facilityIdInput = document.getElementById('facilityIdInput');
     const airconToggle = document.getElementById('airconToggle');
+    const facilityElements = {};
 
     FACILITIES.forEach(f => {
         const el = document.createElement('div');
         el.className = 'facility-option';
-        el.innerHTML = `<div class="f-name">${f.name}</div><div class="f-cap">Capacity: ${f.capacity} pax</div>`;
-        el.addEventListener('click', () => selectFacility(f, el));
+        el.innerHTML = `
+            <button type="button" class="see-details-btn" data-details="${f.id}">See details</button>
+            <div class="f-name">${f.name}</div>
+            <div class="f-cap">Capacity: ${f.capacity} pax</div>
+        `;
+        el.querySelector('.f-name, .f-cap');
+        el.addEventListener('click', (e) => {
+            if (e.target.closest('.see-details-btn')) return; // handled separately
+            selectFacility(f, el);
+        });
+        el.querySelector('.see-details-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showRoomDetails(f);
+        });
         facilityGrid.appendChild(el);
+        facilityElements[f.id] = el;
     });
+
+    function showRoomDetails(f) {
+        document.getElementById('rmName').textContent = f.name;
+        document.getElementById('rmPhoto').style.backgroundImage = f.image ? `url('${f.image}')` : 'none';
+        document.getElementById('rmCapacity').textContent = f.capacity + ' pax';
+        document.getElementById('rmLocation').textContent = f.location || '—';
+        openModal('roomDetailsModal');
+    }
 
     function selectFacility(facility, el) {
         selectedFacility = facility;
         selectedRateType = null;
         facilityIdInput.value = facility.id;
+        document.getElementById('rateTypeInput').value = '';
 
         document.querySelectorAll('.facility-option').forEach(o => o.classList.remove('selected'));
         el.classList.add('selected');
@@ -373,8 +541,61 @@
             airconToggle.querySelectorAll('input').forEach(i => i.checked = false);
         }
 
+        updateStep2Visibility(); // re-applies free_use's "hide billing" override on top of the aircon check above
+
         renderRateModes();
+        checkAvailability();
     }
+
+    // ---------------- availability (non-conflict check) ----------------
+    const availabilityPanel = document.getElementById('availabilityPanel');
+
+    function checkAvailability() {
+        const date = document.getElementById('eventDate').value;
+        if (!selectedFacility || !date) {
+            availabilityPanel.classList.remove('show');
+            return;
+        }
+
+        fetch(`${AVAILABILITY_URL}?facility_id=${selectedFacility.id}&date=${date}`)
+            .then(r => r.json())
+            .then(data => {
+                busyRanges = data.busy_ranges || [];
+                wholeDayBlocked = !!data.whole_day_blocked;
+                renderAvailabilityPanel(data);
+                updateBillingSummary();
+            })
+            .catch(() => { availabilityPanel.classList.remove('show'); });
+    }
+
+    function renderAvailabilityPanel(data) {
+        availabilityPanel.classList.add('show');
+        availabilityPanel.classList.remove('blocked', 'ok');
+
+        if (data.whole_day_blocked) {
+            availabilityPanel.classList.add('blocked');
+            availabilityPanel.innerHTML = `<div class="av-title">Not available on this date</div>${data.block_reason || 'This facility is closed on the selected date.'}`;
+            return;
+        }
+
+        if (!data.busy_ranges || data.busy_ranges.length === 0) {
+            availabilityPanel.classList.add('ok');
+            availabilityPanel.innerHTML = `<div class="av-title">Fully open on this date</div>No existing bookings for ${selectedFacility.name} on this date.`;
+            return;
+        }
+
+        const chips = data.busy_ranges.map(r => `<span class="busy-chip">${r.start}–${r.end}</span>`).join('');
+        availabilityPanel.innerHTML = `<div class="av-title">Already booked on this date</div>${chips}<div style="margin-top:6px;">Pick a start/end time outside these ranges.</div>`;
+    }
+
+    function hasTimeConflict() {
+        const start = document.getElementById('startTime').value;
+        const end = document.getElementById('endTime').value;
+        if (!start || !end) return false;
+        return busyRanges.some(r => start < r.end && end > r.start);
+    }
+
+    document.getElementById('eventDate').addEventListener('change', checkAvailability);
 
     // ---------------- rate modes ----------------
     const rateModesEl = document.getElementById('rateModes');
@@ -398,7 +619,7 @@
         if (!selectedFacility) return;
 
         Object.keys(RATE_LABELS).forEach(type => {
-            if (!selectedFacility.schedule[type]) return; // not offered for this facility
+            if (!selectedFacility.schedule[type]) return;
 
             const row = document.createElement('div');
             row.className = 'rate-mode';
@@ -406,6 +627,7 @@
             row.innerHTML = `<span class="rm-label">${RATE_LABELS[type]}</span><span class="rm-price">${formatRatePreview(type)}</span>`;
             row.addEventListener('click', () => {
                 selectedRateType = type;
+                document.getElementById('rateTypeInput').value = type;
                 document.querySelectorAll('.rate-mode').forEach(r => r.classList.remove('selected'));
                 row.classList.add('selected');
                 updateBillingSummary();
@@ -460,14 +682,72 @@
         document.getElementById('sumTotal').textContent = peso(base);
     }
 
-    function updatePaymentSummary() {
-        const total = computeBaseAmount();
-        const downpayment = Math.round(total * {{ $downpaymentPercent }} / 100 * 100) / 100;
-        document.getElementById('paySumTotal').textContent = peso(total);
-        document.getElementById('paySumDownpayment').textContent = peso(downpayment);
-        document.getElementById('paySumBalance').textContent = peso(total - downpayment);
+    function updateCommitmentBlocks() {
+        document.querySelectorAll('[data-type-block]').forEach(b => {
+            b.classList.toggle('show', b.dataset.typeBlock === selectedBookingType);
+        });
     }
 
-    showStep(1);
+    // ---------------- restore state after a validation error ----------------
+    // Laravel's back()->withErrors()->withInput() reloads this page fresh —
+    // without this, the client would lose their Step 2 room/rate/booking-type
+    // picks (those only ever lived in JS state) and always land back on Step 1
+    // regardless of which step the actual error was on.
+    const OLD = {
+        booking_type: @json(old('booking_type')),
+        facility_id: @json(old('facility_id')),
+        rate_type: @json(old('rate_type')),
+        aircon: @json(old('aircon')),
+    };
+    const FIELD_ERRORS = @json($errors->keys());
+
+    if (OLD.booking_type) {
+        const typeEl = document.querySelector(`.type-option[data-type="${OLD.booking_type}"]`);
+        if (typeEl) {
+            selectedBookingType = OLD.booking_type;
+            document.getElementById('bookingTypeInput').value = OLD.booking_type;
+            typeEl.classList.add('selected');
+            updateStep2Visibility();
+        }
+    }
+
+    if (OLD.facility_id && facilityElements[OLD.facility_id]) {
+        const facility = FACILITIES.find(f => String(f.id) === String(OLD.facility_id));
+        if (facility) {
+            selectFacility(facility, facilityElements[OLD.facility_id]);
+
+            if (OLD.aircon !== null && OLD.aircon !== undefined) {
+                const radio = airconToggle.querySelector(`input[value="${OLD.aircon}"]`);
+                if (radio) { radio.checked = true; renderRateModes(); }
+            }
+
+            if (OLD.rate_type) {
+                const rateEl = rateModesEl.querySelector(`.rate-mode[data-type="${OLD.rate_type}"]`);
+                if (rateEl) {
+                    selectedRateType = OLD.rate_type;
+                    document.getElementById('rateTypeInput').value = OLD.rate_type;
+                    rateEl.classList.add('selected');
+                }
+            }
+
+            updateBillingSummary();
+        }
+    }
+
+    // Jump to the earliest step that actually has a validation error,
+    // instead of always resetting to Step 1.
+    const STEP_1_FIELDS = ['booking_type', 'full_name', 'contact_number', 'barangay', 'activity_title', 'expected_attendees'];
+    const STEP_2_FIELDS = ['facility_id', 'aircon', 'rate_type', 'event_date', 'start_time', 'end_time'];
+
+    let startStep = 1;
+    if (FIELD_ERRORS.some(f => STEP_2_FIELDS.includes(f))) {
+        startStep = 2;
+    } else if (FIELD_ERRORS.some(f => f === 'commitment_acknowledged')) {
+        startStep = 3;
+    } else if (FIELD_ERRORS.some(f => STEP_1_FIELDS.includes(f))) {
+        startStep = 1;
+    }
+
+    showStep(startStep);
 </script>
 @endpush

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard') · SSComplexPlatform Admin</title>
+    <title>@yield('title', 'Dashboard') · SSComplexPlatform Staff</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -128,7 +128,6 @@
             font-size:10px;font-weight:700;border-radius:999px;
             padding:1px 7px;
         }
-        .nav-item .badge.new{background:#fff;color:var(--green-800);}
 
         .sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:14px;}
         .user-chip{
@@ -157,7 +156,7 @@
         .modal-overlay{
             position:fixed;inset:0;background:rgba(7,35,26,.55);
             display:none;align-items:center;justify-content:center;
-            z-index:100;padding:20px;
+            z-index:300;padding:20px;
         }
         .modal-overlay.show{display:flex;}
         .modal-box{
@@ -200,12 +199,6 @@
             position:absolute;top:8px;right:8px;width:6px;height:6px;
             border-radius:50%;background:var(--orange-500);
         }
-        .btn-primary{
-            background:var(--ink-900);color:#fff;border:none;
-            padding:11px 16px;border-radius:11px;font-weight:700;font-size:13px;
-            display:flex;align-items:center;gap:8px;cursor:pointer;
-            white-space:nowrap;
-        }
         .hamburger-btn{
             width:38px;height:38px;border-radius:11px;background:#fff;
             border:1px solid var(--line);align-items:center;justify-content:center;
@@ -239,6 +232,8 @@
         .trend.down{color:var(--orange-500);}
         .muted{color:var(--ink-400);font-weight:600;}
 
+        .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
         .empty-state{
             display:flex;flex-direction:column;align-items:center;justify-content:center;
             gap:6px;padding:34px 10px;color:var(--ink-400);text-align:center;
@@ -265,8 +260,6 @@
         }
 
         @media (max-width: 560px){
-            .btn-primary span.btn-label{display:none;}
-            .btn-primary{padding:11px;}
             .topbar{gap:10px;}
             .card{padding:16px;}
         }
@@ -290,7 +283,7 @@
             <span class="dot"></span>
             <div>
                 <span class="ws-label">Team Workspace</span>
-                <span class="ws-name">SSC Admin</span>
+                <span class="ws-name">SSC Staff</span>
             </div>
         </div>
 
@@ -302,13 +295,8 @@
         <div>
             <div class="nav-section-label">NAVIGATION</div>
             <nav class="nav">
-                <a class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="ic">▦</span> Dashboard</a>
-                <a class="nav-item {{ request()->routeIs('admin.posters*') ? 'active' : '' }}" href="{{ route('admin.posters.index') }}"><span class="ic">🖼</span> Posters</a>
-                <a class="nav-item {{ request()->routeIs('admin.staff*') ? 'active' : '' }}" href="{{ route('admin.staff.index') }}"><span class="ic">👤</span> Staff Accounts</a>
-                <a class="nav-item"><span class="ic">◐</span> Analytics</a>
-                <a class="nav-item"><span class="ic">▤</span> Team Structure</a>
-                <a class="nav-item"><span class="ic">▥</span> Reports <span class="badge">{{ $pendingReportsCount ?? 0 }}</span></a>
-                <a class="nav-item"><span class="ic">◈</span> Support <span class="badge new">NEW</span></a>
+                <a class="nav-item {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}" href="{{ route('staff.dashboard') }}"><span class="ic">▦</span> Dashboard</a>
+                <a class="nav-item {{ request()->routeIs('staff.verify*') ? 'active' : '' }}" href="{{ route('staff.verify.index') }}"><span class="ic">✔</span> Verify @if(($pendingVerificationCount ?? 0) > 0)<span class="badge">{{ $pendingVerificationCount }}</span>@endif</a>
             </nav>
         </div>
 
@@ -317,7 +305,7 @@
             <div class="user-chip">
                 <div class="avatar"></div>
                 <div class="u-info">
-                    <div class="u-name">{{ auth()->user()->first_name ?? 'Admin User' }}</div>
+                    <div class="u-name">{{ auth()->user()->first_name ?? 'Staff' }}</div>
                     <div class="u-id">#{{ auth()->user()->id ?? '0000' }}</div>
                 </div>
                 <button type="button" class="logout-btn" title="Log out" onclick="openLogoutModal()">⏻</button>
@@ -349,9 +337,14 @@
             </div>
             <div class="topbar-actions">
                 <div class="icon-btn">🔔<span class="dot"></span></div>
-                <button class="btn-primary">+ <span class="btn-label">Add Custom Widget</span></button>
             </div>
         </div>
+
+        @if(session('status'))
+            <div class="dropdown-chip" style="margin-bottom:18px;background:var(--green-100);color:var(--green-700);border-color:var(--green-500);font-weight:700;">
+                {{ session('status') }}
+            </div>
+        @endif
 
         @yield('content')
     </main>

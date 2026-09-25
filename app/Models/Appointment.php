@@ -10,14 +10,18 @@ class Appointment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'facility_id', 'activity_type_id', 'activity_title', 'track', 'status',
+        'user_id', 'facility_id', 'activity_type_id', 'activity_title', 'track', 'booking_type',
+        'rate_type', 'aircon', 'status',
         'event_date', 'start_time', 'end_time', 'expected_attendees',
-        'approval_form_path', 'notes', 'verified_by', 'verified_at',
+        'approval_form_path', 'approval_form_submitted_at', 'approval_form_submitted_by',
+        'notes', 'verified_by', 'verified_at',
     ];
 
     protected $casts = [
-        'event_date'  => 'date',
-        'verified_at' => 'datetime',
+        'event_date'                  => 'date',
+        'verified_at'                 => 'datetime',
+        'aircon'                      => 'boolean',
+        'approval_form_submitted_at'  => 'datetime',
     ];
 
     public function client()

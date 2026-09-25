@@ -15,19 +15,18 @@ class DashboardController extends Controller
      * NOTE ON ASSUMPTIONS
      * --------------------
      * Same appointments/unavailable_slots/rates/activity_types tables
-     * referenced in the admin DashboardController. Two extras assumed here:
+     * referenced in the admin DashboardController.
      *
-     *   - appointments.status is assumed to eventually carry more values
-     *     than the admin dashboard's pending/confirmed/completed/cancelled
-     *     (e.g. once rescheduling exists). For this "My Activities" list
-     *     they're bucketed into exactly the four the client cares about:
-     *       ongoing      <- pending, confirmed, ongoing
-     *       rescheduled  <- rescheduled
-     *       cancelled    <- cancelled
-     *       finished     <- completed, finished
-     *     Adjust the mapping in statusBucket() once the real enum is set.
+     * appointments.status pipeline now covers both tracks:
+     *   paid:      pending -> verified -> payment_submitted -> receipt_confirmed -> scheduled -> finished
+     *   free_use:  pending -> verified -> form_submitted -> (staff review, not built yet) -> scheduled -> finished
+     *   both:      cancelled / rescheduled as branches
      *
-     *   - rates.rate_per_hour is a decimal; formatted here as "₱250/hr".
+     * "My Activities" buckets these into the four the client cares about
+     * via statusBucket(); statusAction() drives the per-row button (or
+     * plain-text placeholder) and is where the two tracks diverge —
+     * see the class doc comment on ReservationController for the full
+     * track/booking_type rationale.
      */
 
     public function index()
@@ -77,35 +76,37 @@ class DashboardController extends Controller
         }
 
         $rows = DB::table('appointments')
-            ->where('user_id', Auth::id())
-            ->orderByDesc('event_date')
-            ->orderByDesc('start_time')
+            ->join('facilities', 'facilities.id', '=', 'appointments.facility_id')
+            ->where('appointments.user_id', Auth::id())
+            ->orderByDesc('appointments.event_date')
+            ->orderByDesc('appointments.start_time')
             ->limit(50)
-            ->get();
+            ->get([
+                'appointments.id', 'appointments.activity_title', 'appointments.status',
+                'appointments.booking_type', 'appointments.track', 'appointments.event_date', 'appointments.start_time',
+                'facilities.name as facility_name',
+            ]);
 
         $activities = $rows->map(function ($row) use (&$counts) {
-            $bucket = $this->statusBucket($row->status ?? '');
+            $bucket = $this->statusBucket($row->status);
             $counts[$bucket]++;
             $counts['all']++;
 
-            $labels = [
-                'ongoing'     => 'Ongoing',
-                'rescheduled' => 'Re-scheduled',
-                'cancelled'   => 'Cancelled',
-                'finished'    => 'Finished',
-            ];
-
             $dateTime = trim(
-                (isset($row->event_date) ? Carbon::parse($row->event_date)->format('M j, Y') : '') .
-                (isset($row->start_time) ? ' · ' . Carbon::parse($row->start_time)->format('g:i A') : '')
+                Carbon::parse($row->event_date)->format('M j, Y') .
+                ' · ' . Carbon::parse($row->start_time)->format('g:i A')
             );
 
             return [
-                'activity'     => $row->activity ?? '—',
-                'unit'         => $row->function_unit ?? '—',
-                'date_time'    => $dateTime ?: '—',
-                'status_key'   => $bucket,
-                'status_label' => $labels[$bucket],
+                'appointment_id' => $row->id,
+                'activity'       => $row->activity_title ?? '—',
+                'unit'           => $row->facility_name ?? '—',
+                'date_time'      => $dateTime,
+                'booking_type'   => $row->booking_type,
+                'track'          => $row->track,
+                'status_key'     => $bucket,
+                'status_label'   => $this->statusLabel($row->status),
+                'action'         => $this->statusAction($row->id, $row->status, $row->track),
             ];
         })->toArray();
 
@@ -115,11 +116,72 @@ class DashboardController extends Controller
     private function statusBucket(string $status): string
     {
         return match (strtolower($status)) {
-            'rescheduled', 're-scheduled' => 'rescheduled',
-            'cancelled', 'canceled'       => 'cancelled',
-            'completed', 'finished'       => 'finished',
-            default                       => 'ongoing', // pending, confirmed, ongoing, or anything unrecognized
+            'rescheduled'                => 'rescheduled',
+            'cancelled', 'canceled'      => 'cancelled',
+            'finished', 'completed'      => 'finished',
+            default                      => 'ongoing', // pending, verified, payment_submitted, receipt_confirmed, form_submitted, scheduled...
         };
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match (strtolower($status)) {
+            'pending'            => 'Pending Staff Review',
+            'verified'           => 'Verified',
+            'payment_submitted'  => 'Payment Submitted',
+            'receipt_confirmed'  => 'Awaiting Scheduling',
+            'form_submitted'     => 'Form Submitted',
+            'scheduled'          => 'Scheduled',
+            'rescheduled'        => 'Re-scheduled',
+            'cancelled'          => 'Cancelled',
+            'finished',
+            'completed'          => 'Finished',
+            default              => ucfirst(str_replace('_', ' ', $status)),
+        };
+    }
+
+    /**
+     * The client's next action for a given status, if any — drives the
+     * button (or plain-text placeholder) in the dashboard's My Activities
+     * table. This is where the paid and free_use tracks diverge:
+     *   - paid:     verified -> "Pay" button; payment_submitted -> "Continue"
+     *               (to Receipt Confirmation); otherwise a "not yet
+     *               applicable for payment" placeholder while pending.
+     *   - free_use: verified -> "Attach Form" button (opens the dashboard's
+     *               modal); otherwise a "not yet applicable for document
+     *               attachment" placeholder while pending.
+     *
+     * Returns a type so the Blade knows how to render it: 'link' (goes to
+     * a route), 'modal' (opens the Attach Form modal via JS), 'text' (a
+     * plain non-interactive label), or 'none' (nothing shown).
+     */
+    private function statusAction(int $appointmentId, string $status, string $track): array
+    {
+        $status = strtolower($status);
+        $isFreeUse = $track === 'free_use';
+
+        if ($status === 'pending') {
+            return [
+                'type'  => 'text',
+                'label' => $isFreeUse ? 'Not yet applicable for document attachment' : 'Not yet applicable for payment',
+            ];
+        }
+
+        if ($status === 'verified') {
+            return $isFreeUse
+                ? ['type' => 'modal', 'label' => 'Attach Form', 'appointment_id' => $appointmentId]
+                : ['type' => 'link', 'label' => 'Pay', 'route' => route('client.reservations.pay', $appointmentId)];
+        }
+
+        if ($status === 'payment_submitted' && !$isFreeUse) {
+            return ['type' => 'link', 'label' => 'Continue', 'route' => route('client.reservations.receipt-confirmation', $appointmentId)];
+        }
+
+        if ($status === 'form_submitted' && $isFreeUse) {
+            return ['type' => 'text', 'label' => 'Submitted — Awaiting Staff Review'];
+        }
+
+        return ['type' => 'none'];
     }
 
     private function unavailableSlots(bool $hasTable): array

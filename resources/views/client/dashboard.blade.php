@@ -56,6 +56,29 @@
     .activity-table td{padding:12px 10px;font-size:13px;border-bottom:1px solid var(--line);}
     .activity-table tr:last-child td{border-bottom:none;}
     .unit-pill{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--green-050);color:var(--green-700);border:1px solid var(--green-100);}
+    .activity-action-btn{
+        display:inline-block;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:999px;
+        background:var(--green-600);color:#fff;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;
+    }
+    .activity-action-btn:hover{background:var(--green-700);}
+    .activity-action-note{
+        display:inline-block;font-size:11px;font-weight:600;color:var(--ink-400);white-space:nowrap;
+        font-style:italic;
+    }
+
+    /* ---------- Attach Form modal ---------- */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(7,35,26,.55);align-items:center;justify-content:center;z-index:300;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal-box{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:420px;padding:24px;box-shadow:0 24px 60px -20px rgba(7,35,26,.4);text-align:left;}
+    .modal-box .modal-title{font-size:16px;font-weight:800;margin-bottom:4px;}
+    .modal-box .modal-sub{font-size:12.5px;color:var(--ink-400);margin-bottom:18px;}
+    .af-field{margin-bottom:14px;}
+    .af-field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-600);margin-bottom:6px;}
+    .af-field input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;background:var(--green-050);}
+    .af-actions{display:flex;gap:10px;margin-top:18px;}
+    .af-actions button{flex:1;padding:11px 0;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;border:1px solid var(--line);}
+    .af-cancel{background:#fff;color:var(--ink-900);}
+    .af-submit{background:var(--green-600);border-color:var(--green-600);color:#fff;}
 
     /* ---------- Unavailable days & hours ---------- */
     .unavail-list{display:flex;flex-direction:column;gap:10px;}
@@ -166,6 +189,7 @@
                     <th>Unit</th>
                     <th>Date & Time</th>
                     <th>Status</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -175,6 +199,16 @@
                         <td><span class="unit-pill">{{ $activity['unit'] }}</span></td>
                         <td class="muted">{{ $activity['date_time'] }}</td>
                         <td><span class="status-pill {{ $activity['status_key'] }}">{{ $activity['status_label'] }}</span></td>
+                        <td>
+                            @php($action = $activity['action'])
+                            @if($action['type'] === 'link')
+                                <a href="{{ $action['route'] }}" class="activity-action-btn">{{ $action['label'] }}</a>
+                            @elseif($action['type'] === 'modal')
+                                <button type="button" class="activity-action-btn" onclick="openAttachFormModal({{ $action['appointment_id'] }})">{{ $action['label'] }}</button>
+                            @elseif($action['type'] === 'text')
+                                <span class="activity-action-note">{{ $action['label'] }}</span>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -274,10 +308,60 @@
     </div>
 </div>
 
+{{-- Attach Form modal (free-use track) — shared modal, JS points its form
+     action at whichever appointment's "Attach Form" button was clicked --}}
+<div class="modal-overlay" id="attachFormModal">
+    <div class="modal-box">
+        <div class="modal-title">Attach Approval Form</div>
+        <div class="modal-sub">Upload your Subic Administration Office / Mayor's approval form so Staff can review it.</div>
+
+        <form method="POST" id="attachFormForm" enctype="multipart/form-data">
+            @csrf
+
+            <div class="af-field">
+                <label>Attachment</label>
+                <input type="file" name="attachment" accept="image/*,.pdf" required>
+            </div>
+
+            <div class="af-field">
+                <label>Date & Time Submitted</label>
+                <input type="datetime-local" name="date_time_submitted" required>
+            </div>
+
+            <div class="af-field">
+                <label>Who Submitted</label>
+                <input type="text" name="who_submitted" placeholder="Full name of the person who submitted the form" required>
+            </div>
+
+            <div class="af-actions">
+                <button type="button" class="af-cancel" onclick="closeModal('attachFormModal')">Cancel</button>
+                <button type="submit" class="af-submit">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
+    function openModal(id){ document.getElementById(id).classList.add('show'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(o => o.classList.remove('show')); });
+
+    function openAttachFormModal(appointmentId) {
+        const form = document.getElementById('attachFormForm');
+        form.action = `{{ url('/client/reservations') }}/${appointmentId}/approval-form`;
+
+        // default the submitted-at field to right now, in the local datetime-local format
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        form.querySelector('input[name="date_time_submitted"]').value = now.toISOString().slice(0, 16);
+
+        openModal('attachFormModal');
+    }
+
     // announcements carousel: arrows + flip-to-detail (same pattern as the landing page)
     (function(){
         const track = document.getElementById('announceTrack');

@@ -56,6 +56,10 @@ class AuthController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        if (Auth::user()->role === 'staff') {
+            return redirect()->route('staff.dashboard');
+        }
+
         if (Auth::user()->role === 'client') {
             return redirect()->route('client.dashboard');
         }
@@ -66,11 +70,11 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
-            'first_name'    => ['required','string','max:255','regex:/^[\pL\s\'-]+$/u',],
-            'last_name'     => ['required','string','max:255','regex:/^[\pL\s\'-]+$/u',],
+            'first_name'    => ['required', 'string', 'max:255'],
+            'last_name'     => ['required', 'string', 'max:255'],
             'email'         => ['required', 'email', 'unique:users,email'],
-            'phone_number'  => ['required|digits:11'],
-            'password'      => ['required|string|min:8|confirmed'],
+            'phone_number'  => ['nullable', 'string', 'max:20'],
+            'password'      => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         if ($validator->fails()) {

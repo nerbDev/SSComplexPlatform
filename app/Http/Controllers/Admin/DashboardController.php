@@ -10,25 +10,32 @@ use Carbon\Carbon;
 class DashboardController extends Controller
 {
     /**
-     * NOTE ON ASSUMPTIONS
-     * --------------------
-     * This assumes two tables that don't exist yet in the project:
-     *   - users.barangay            (nullable string, role = 'client')
-     *   - appointments               (id, user_id, function_unit, activity,
-     *                                  scheduled_date, start_time, end_time,
-     *                                  status, track, created_at)
-     *     function_unit values: 'Function 1' | 'Function 2' | 'Function 3' | 'Lobby and Whole Court'
-     *     status values:        'pending' | 'confirmed' | 'completed' | 'cancelled'
-     *     track values:         'paid' | 'free_use'
+     * Updated for the real schema introduced in Sprint 2 (see
+     * ReservationController/PaymentController):
+     *   - appointments.facility_id (FK to facilities) replaces the old
+     *     guessed `function_unit` string column.
+     *   - appointments.activity_title replaces the old `activity` column.
+     *   - appointments.status now uses the real pipeline:
+     *     pending -> verified -> payment_submitted -> receipt_confirmed ->
+     *     scheduled -> finished, with cancelled/rescheduled as branches.
+     *   - users.barangay is still assumed (nullable string) — not yet a
+     *     real column as far as this controller knows; guarded as before.
      *
-     * Every query below is guarded with Schema::hasTable()/hasColumn() so the
-     * dashboard renders a clean zero-state even if these don't exist yet or
-     * are empty. Rename the table/column names to match your actual schema.
+     * Every query is still guarded with Schema::hasTable()/hasColumn() so
+     * the dashboard renders a clean zero-state before these tables/columns
+     * exist or are empty.
      */
+
+    /** Statuses that count as "occupying" a facility's time today. */
+    private const OCCUPYING_STATUSES = ['pending', 'verified', 'payment_submitted', 'receipt_confirmed', 'form_submitted', 'scheduled', 'finished'];
+
+    /** Facility accent colors for the dashboard cards — cosmetic only, not stored in the DB. */
+    private const FACILITY_COLORS = ['var(--green-500)', 'var(--green-700)', 'var(--orange-500)', 'var(--ink-600)'];
 
     public function index()
     {
         $hasAppointments = Schema::hasTable('appointments');
+        $hasFacilities = Schema::hasTable('facilities');
         $hasBarangay = Schema::hasTable('users') && Schema::hasColumn('users', 'barangay');
 
         return view('admin.dashboard', [
@@ -36,10 +43,10 @@ class DashboardController extends Controller
             'appointmentsPerBarangay' => $this->appointmentsPerBarangay($hasAppointments, $hasBarangay),
             'appointmentsThisWeek'    => $this->appointmentsThisWeek($hasAppointments),
             'scheduleDays'            => $this->scheduleDays($hasAppointments),
-            'scheduleAppointments'    => $this->scheduleAppointments($hasAppointments),
+            'scheduleAppointments'    => $this->scheduleAppointments($hasAppointments, $hasFacilities),
             'weekOverview'            => $this->weekOverview($hasAppointments),
-            'availableHours'          => $this->availableHours($hasAppointments),
-            'roomStatus'              => $this->roomStatus($hasAppointments),
+            'availableHours'          => $this->availableHours($hasAppointments, $hasFacilities),
+            'roomStatus'              => $this->roomStatus($hasAppointments, $hasFacilities),
             'pendingReportsCount'     => 0,
         ]);
     }
@@ -147,21 +154,22 @@ class DashboardController extends Controller
         return $days;
     }
 
-    private function scheduleAppointments(bool $hasAppointments): array
+    private function scheduleAppointments(bool $hasAppointments, bool $hasFacilities): array
     {
-        if (!$hasAppointments) {
+        if (!$hasAppointments || !$hasFacilities) {
             return [];
         }
 
         $rows = DB::table('appointments')
             ->join('users', 'users.id', '=', 'appointments.user_id')
-            ->whereDate('event_date', Carbon::today()->toDateString())
-            ->orderBy('start_time')
+            ->join('facilities', 'facilities.id', '=', 'appointments.facility_id')
+            ->whereDate('appointments.event_date', Carbon::today()->toDateString())
+            ->orderBy('appointments.start_time')
             ->select(
                 'appointments.start_time',
-                'appointments.activity',
-                'appointments.function_unit',
+                'appointments.activity_title',
                 'appointments.status',
+                'facilities.name as facility_name',
                 'users.first_name',
                 'users.last_name'
             )
@@ -172,22 +180,30 @@ class DashboardController extends Controller
             $name = trim($row->first_name . ' ' . $row->last_name);
             $initials = collect(explode(' ', $name))->map(fn($p) => strtoupper(substr($p, 0, 1)))->take(2)->implode('');
 
-            $statusMap = [
-                'confirmed' => 'confirmed',
-                'completed' => 'completed',
-                'pending'   => 'pending',
-            ];
-
             return [
-                'time' => Carbon::parse($row->start_time)->format('g:i A'),
-                'client_name' => $name ?: 'Unnamed client',
-                'initials' => $initials ?: '—',
-                'activity' => $row->activity,
-                'unit' => $row->function_unit,
-                'status' => ucfirst($row->status),
-                'status_class' => $statusMap[$row->status] ?? 'pending',
+                'time'         => Carbon::parse($row->start_time)->format('g:i A'),
+                'client_name'  => $name ?: 'Unnamed client',
+                'initials'     => $initials ?: '—',
+                'activity'     => $row->activity_title,
+                'unit'         => $row->facility_name,
+                'status'       => ucfirst(str_replace('_', ' ', $row->status)),
+                'status_class' => $this->statusPillClass($row->status),
             ];
         })->toArray();
+    }
+
+    /**
+     * Maps the real status pipeline onto the dashboard's existing 3
+     * status-pill styles (confirmed / pending / completed). Swap this for
+     * a dedicated class per status once the Blade CSS grows to support them.
+     */
+    private function statusPillClass(string $status): string
+    {
+        return match (strtolower($status)) {
+            'verified', 'payment_submitted', 'receipt_confirmed', 'form_submitted', 'scheduled' => 'confirmed',
+            'finished', 'completed' => 'completed',
+            default => 'pending', // pending, cancelled, rescheduled
+        };
     }
 
     private function weekOverview(bool $hasAppointments): array
@@ -218,45 +234,45 @@ class DashboardController extends Controller
         ];
     }
 
-    private function availableHours(bool $hasAppointments): array
+    private function availableHours(bool $hasAppointments, bool $hasFacilities): array
     {
-        $units = [
-            ['name' => 'Function 1', 'capacity' => 300, 'color' => 'var(--green-500)', 'open_hours' => 12],
-            ['name' => 'Function 2', 'capacity' => 200, 'color' => 'var(--green-700)', 'open_hours' => 12],
-            ['name' => 'Function 3', 'capacity' => 200, 'color' => 'var(--orange-500)', 'open_hours' => 12],
-            ['name' => 'Lobby and Whole Court', 'capacity' => 2000, 'color' => 'var(--ink-600)', 'open_hours' => 12],
-        ];
+        if (!$hasFacilities) {
+            return [];
+        }
 
-        return array_map(function ($unit) use ($hasAppointments) {
+        $facilities = DB::table('facilities')->where('is_active', true)->orderBy('name')->get();
+        $openHours = 12; // 8am–8pm; adjust once real operating hours are confirmed
+
+        return $facilities->map(function ($facility, $i) use ($hasAppointments, $openHours) {
             $bookedHours = 0;
 
             if ($hasAppointments) {
                 $bookedHours = DB::table('appointments')
-                    ->where('function_unit', $unit['name'])
+                    ->where('facility_id', $facility->id)
                     ->whereDate('event_date', Carbon::today()->toDateString())
-                    ->whereIn('status', ['confirmed', 'completed'])
+                    ->whereIn('status', self::OCCUPYING_STATUSES)
                     ->get(['start_time', 'end_time'])
                     ->sum(fn($row) => Carbon::parse($row->start_time)->diffInHours(Carbon::parse($row->end_time)));
             }
 
-            $availableHours = max(0, $unit['open_hours'] - $bookedHours);
-            $utilization = $unit['open_hours'] > 0 ? min(100, round(($bookedHours / $unit['open_hours']) * 100)) : 0;
+            $availableHours = max(0, $openHours - $bookedHours);
+            $utilization = $openHours > 0 ? min(100, round(($bookedHours / $openHours) * 100)) : 0;
 
             return [
-                'name' => $unit['name'],
-                'capacity' => $unit['capacity'],
-                'color' => $unit['color'],
+                'name' => $facility->name,
+                'capacity' => $facility->capacity,
+                'color' => self::FACILITY_COLORS[$i % count(self::FACILITY_COLORS)],
                 'booked_hours' => $bookedHours,
                 'available_hours' => $availableHours,
                 'utilization' => $utilization,
                 'status' => $availableHours > 0 ? 'Open' : 'Full',
             ];
-        }, $units);
+        })->toArray();
     }
 
-    private function roomStatus(bool $hasAppointments): array
+    private function roomStatus(bool $hasAppointments, bool $hasFacilities): array
     {
-        $hours = $this->availableHours($hasAppointments);
+        $hours = $this->availableHours($hasAppointments, $hasFacilities);
 
         return array_map(fn($u) => [
             'name' => $u['name'],
