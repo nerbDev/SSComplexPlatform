@@ -35,8 +35,7 @@
     .field-error{color:var(--orange-500);font-size:11.5px;font-weight:700;margin-top:5px;}
 
     /* ---------- booking type ---------- */
-    .type-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:18px;}
-    @media (max-width:820px){ .type-grid{grid-template-columns:1fr 1fr;} }
+    .type-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:14px;margin-bottom:18px;}
     @media (max-width:600px){ .type-grid{grid-template-columns:1fr;} }
     .type-option{
         border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;
@@ -194,17 +193,6 @@
                         </ul>
                     </div>
                 </div>
-                <div class="type-option" data-type="room_reservation">
-                    <div class="t-name">Room Reservation</div>
-                    <div class="t-desc">
-                        <ul>
-                            <li>For events booked far in advance</li>
-                            <li>{{ $roomReservationDownpaymentPercent }}% downpayment now</li>
-                            <li>Remaining balance due {{ $balanceDueDaysBefore }} days before the event</li>
-                            <li>Same room rates, 10% rescheduling fee</li>
-                        </ul>
-                    </div>
-                </div>
                 <div class="type-option" data-type="free_use">
                     <div class="t-name">Free Use</div>
                     <div class="t-desc">
@@ -322,13 +310,6 @@
                         <li>Ingress fees (before/after the event) are currently unpriced and will be communicated separately once confirmed by the Municipality.</li>
                     </ul>
                 </div>
-                <div data-type-block="room_reservation">
-                    <ul>
-                        <li>Room Reservations require a <strong>{{ $roomReservationDownpaymentPercent }}% downpayment</strong> now to confirm the booking.</li>
-                        <li>The remaining balance must be settled at least <strong>{{ $balanceDueDaysBefore }} days before the event date</strong>. Unpaid balances past this deadline may result in cancellation.</li>
-                        <li>Ingress fees (before/after the event) are currently unpriced and will be communicated separately once confirmed by the Municipality.</li>
-                    </ul>
-                </div>
                 <div data-type-block="free_use">
                     <ul>
                         <li><strong>No payment is required</strong> for Free Use bookings.</li>
@@ -438,7 +419,7 @@
             if (!input.reportValidity()) return false;
         }
         if (step === 1 && !selectedBookingType) {
-            alert('Please choose Appointment, Room Reservation, or Free Use.');
+            alert('Please choose Appointment or Free Use.');
             return false;
         }
         if (step === 2) {

@@ -37,7 +37,7 @@
         </div>
         @if($appointment->booking_type === 'room_reservation')
             <div class="summary-row">
-                <span class="muted-label">Remaining balance — due {{ $balanceDueDate->format('M j, Y') }}</span>
+                <span class="muted-label">Remaining balance — due {{ $balanceDueDate ? $balanceDueDate->format('M j, Y') : 'to be announced' }}</span>
                 <span>₱{{ number_format($balance, 2) }}</span>
             </div>
         @endif

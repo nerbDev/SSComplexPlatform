@@ -304,7 +304,9 @@
             <nav class="nav">
                 <a class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="ic">▦</span> Dashboard</a>
                 <a class="nav-item {{ request()->routeIs('admin.posters*') ? 'active' : '' }}" href="{{ route('admin.posters.index') }}"><span class="ic">🖼</span> Posters</a>
-                <a class="nav-item {{ request()->routeIs('admin.staff*') ? 'active' : '' }}" href="{{ route('admin.staff.index') }}"><span class="ic">👤</span> Staff Accounts</a>
+                <a class="nav-item {{ request()->routeIs('admin.appointments.index') ? 'active' : '' }}" href="{{ route('admin.appointments.index') }}"><span class="ic">📅</span> Appointments</a>
+                <a class="nav-item {{ request()->routeIs('admin.appointments.scheduled') ? 'active' : '' }}" href="{{ route('admin.appointments.scheduled') }}"><span class="ic">✔</span> Scheduled</a>
+                {{-- <a class="nav-item {{ request()->routeIs('admin.staff*') ? 'active' : '' }}" href="{{ route('admin.staff.index') }}"><span class="ic">👤</span> Staff Accounts</a> --}}
                 <a class="nav-item"><span class="ic">◐</span> Analytics</a>
                 <a class="nav-item"><span class="ic">▤</span> Team Structure</a>
                 <a class="nav-item"><span class="ic">▥</span> Reports <span class="badge">{{ $pendingReportsCount ?? 0 }}</span></a>

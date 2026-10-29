@@ -62,9 +62,7 @@ class PaymentController extends Controller
             $appointment->end_time
         );
 
-        $downpaymentPercent = $appointment->booking_type === 'room_reservation'
-            ? ReservationController::ROOM_RESERVATION_DOWNPAYMENT_PERCENT
-            : ReservationController::APPOINTMENT_DOWNPAYMENT_PERCENT;
+        $downpaymentPercent = ReservationController::APPOINTMENT_DOWNPAYMENT_PERCENT;
 
         $ingressBefore = 0;
         $ingressAfter = 0;
@@ -82,9 +80,7 @@ class PaymentController extends Controller
             'downpaymentPercent' => $downpaymentPercent,
             'downpayment'        => $downpayment,
             'balance'            => $balance,
-            'balanceDueDate'     => $appointment->booking_type === 'room_reservation'
-                ? $appointment->event_date->copy()->subDays(ReservationController::ROOM_RESERVATION_BALANCE_DUE_DAYS_BEFORE)
-                : null,
+            'balanceDueDate'     => null,
         ]);
     }
 
@@ -117,22 +113,22 @@ class PaymentController extends Controller
             $appointment->end_time
         );
 
-        $downpaymentPercent = $appointment->booking_type === 'room_reservation'
-            ? ReservationController::ROOM_RESERVATION_DOWNPAYMENT_PERCENT
-            : ReservationController::APPOINTMENT_DOWNPAYMENT_PERCENT;
+        $downpaymentPercent = ReservationController::APPOINTMENT_DOWNPAYMENT_PERCENT;
 
         $ingressBefore = 0;
         $ingressAfter = 0;
         $total = $amount + $ingressBefore + $ingressAfter;
         $downpayment = round($total * $downpaymentPercent / 100, 2);
         $balance = $total - $downpayment;
-        $balanceDueDate = $appointment->booking_type === 'room_reservation'
-            ? $appointment->event_date->copy()->subDays(ReservationController::ROOM_RESERVATION_BALANCE_DUE_DAYS_BEFORE)
-            : null;
+        $balanceDueDate = null;
+
+        // name of the person who paid — the logged-in owner of this booking
+        $payee = Auth::user();
+        $payeeName = trim(($payee->first_name ?? '') . ' ' . ($payee->last_name ?? ''));
 
         $payment = DB::transaction(function () use (
             $appointment, $facility, $amount, $ingressBefore, $ingressAfter, $total,
-            $downpaymentPercent, $downpayment, $balance, $balanceDueDate, $request
+            $downpaymentPercent, $downpayment, $balance, $balanceDueDate, $payeeName, $request
         ) {
             $payment = Payment::create([
                 'appointment_id'              => $appointment->id,
@@ -155,6 +151,7 @@ class PaymentController extends Controller
                 'appointment' => $appointment,
                 'facility'    => $facility,
                 'payment'     => $payment,
+                'payeeName'   => $payeeName,
             ]);
 
             $receiptPath = "receipts/payment-order-slip-{$appointment->id}.pdf";

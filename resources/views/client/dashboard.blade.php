@@ -4,40 +4,49 @@
 
 @push('styles')
 <style>
-    .section{margin-bottom:18px;}
+    /* ---------- Readable text colors (scoped to dashboard sections) ---------- */
+    .section{
+        margin-bottom:18px;
+        min-width:0;
+        --t-strong:#0f1f18;   /* headings / key values   */
+        --t-body:#22352c;     /* normal table text       */
+        --t-soft:#43564d;     /* secondary / muted text  */
+    }
+    .section .muted{color:var(--t-soft);}
+    .section .card-head{flex-wrap:wrap;gap:8px;}
 
     /* ---------- Announcements carousel (flip cards, green theme) ---------- */
-    .announce-carousel{display:flex;align-items:center;gap:10px;}
+    .announce-carousel{display:flex;align-items:center;gap:10px;min-width:0;}
     .announce-track{
         display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;
         scroll-behavior:smooth;padding:4px 2px 10px;scrollbar-width:none;flex:1;min-width:0;
+        -webkit-overflow-scrolling:touch;
     }
     .announce-track::-webkit-scrollbar{display:none;}
-    .announce-slide{flex:0 0 auto;width:min(46%, 230px);scroll-snap-align:start;perspective:1400px;}
-    @media (max-width:760px){ .announce-slide{width:min(70%, 230px);} }
+    .announce-slide{flex:0 0 clamp(170px, 44%, 230px);scroll-snap-align:start;perspective:1400px;}
 
     .flip-card{position:relative;width:100%;aspect-ratio:3/4;cursor:pointer;}
     .flip-card__inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,.2,.2,1);}
     .flip-card.is-flipped .flip-card__inner{transform:rotateY(180deg);}
     .flip-card__front,.flip-card__back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;box-shadow:0 10px 24px rgba(14,28,23,.18);}
     .flip-card__front{background-size:cover;background-position:center;background-color:var(--green-800);display:flex;align-items:flex-end;}
-    .flip-card__front::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(to top, rgba(7,35,26,.85), transparent 50%);}
-    .flip-card__hint{position:relative;z-index:1;width:100%;text-align:center;padding:.55rem .6rem;font-size:11.5px;font-weight:700;color:#fff;}
+    .flip-card__front::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(to top, rgba(7,35,26,.9), transparent 55%);}
+    .flip-card__hint{position:relative;z-index:1;width:100%;text-align:center;padding:.55rem .6rem;font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);}
     .flip-card__back{transform:rotateY(180deg);background:var(--green-950);color:#fff;padding:16px 14px;display:flex;flex-direction:column;overflow:hidden;}
     .flip-card__status{align-self:flex-start;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:999px;margin-bottom:9px;}
-    .flip-card__status.status-open{background:rgba(31,174,116,.25);color:#4ade80;}
-    .flip-card__status.status-full{background:rgba(239,141,61,.25);color:var(--orange-500);}
-    .flip-card__status.status-ongoing{background:rgba(255,255,255,.15);color:#fff;}
-    .flip-card__status.status-cancelled{background:rgba(180,80,44,.28);color:#e79471;}
-    .flip-card__status.status-finished{background:rgba(255,255,255,.1);color:#c7d6cf;}
-    .flip-card__back h3{font-size:14px;font-weight:800;line-height:1.3;margin-bottom:7px;}
-    .flip-card__meta{font-size:11.5px;color:rgba(255,255,255,.75);margin-bottom:4px;}
-    .flip-card__desc{font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.6);margin-top:6px;flex:1;overflow-y:auto;}
-    .flip-card__close{align-self:flex-start;margin-top:10px;font-size:11px;font-weight:700;color:var(--orange-500);border-bottom:1px solid rgba(239,141,61,.4);}
+    .flip-card__status.status-open{background:rgba(31,174,116,.28);color:#6ee7a0;}
+    .flip-card__status.status-full{background:rgba(239,141,61,.28);color:#ffb26b;}
+    .flip-card__status.status-ongoing{background:rgba(255,255,255,.18);color:#fff;}
+    .flip-card__status.status-cancelled{background:rgba(180,80,44,.32);color:#f4a888;}
+    .flip-card__status.status-finished{background:rgba(255,255,255,.14);color:#dbe7e1;}
+    .flip-card__back h3{font-size:14px;font-weight:800;line-height:1.3;margin-bottom:7px;color:#fff;}
+    .flip-card__meta{font-size:12px;color:rgba(255,255,255,.92);margin-bottom:4px;}
+    .flip-card__desc{font-size:12px;line-height:1.55;color:rgba(255,255,255,.85);margin-top:6px;flex:1;overflow-y:auto;}
+    .flip-card__close{align-self:flex-start;margin-top:10px;font-size:11.5px;font-weight:700;color:#ffb26b;border-bottom:1px solid rgba(255,178,107,.5);}
 
     .carousel-arrow{
         flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--green-050);
-        border:1px solid var(--line);color:var(--ink-900);font-size:16px;display:flex;
+        border:1px solid var(--line);color:var(--t-strong);font-size:16px;display:flex;
         align-items:center;justify-content:center;cursor:pointer;
     }
     .carousel-arrow:hover{background:var(--green-100);}
@@ -45,72 +54,140 @@
     /* ---------- My Activities ---------- */
     .status-tabs{display:flex;gap:6px;flex-wrap:wrap;}
     .status-tab{
-        font-size:12px;font-weight:700;color:var(--ink-600);padding:7px 12px;border-radius:9px;
-        cursor:pointer;background:var(--green-050);border:1px solid var(--line);
+        font-size:12.5px;font-weight:700;color:var(--t-body);padding:8px 13px;border-radius:9px;
+        cursor:pointer;background:var(--green-050);border:1px solid var(--line);white-space:nowrap;
+        user-select:none;-webkit-tap-highlight-color:transparent;
     }
     .status-tab.active{background:var(--green-600);color:#fff;border-color:var(--green-600);}
-    .status-tab .count{margin-left:5px;font-size:10px;opacity:.85;}
+    .status-tab .count{margin-left:5px;font-size:11px;opacity:.9;}
 
     .activity-table{width:100%;border-collapse:collapse;margin-top:14px;}
-    .activity-table th{text-align:left;font-size:11px;color:var(--ink-400);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);}
-    .activity-table td{padding:12px 10px;font-size:13px;border-bottom:1px solid var(--line);}
-    .activity-table tr:last-child td{border-bottom:none;}
-    .unit-pill{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--green-050);color:var(--green-700);border:1px solid var(--green-100);}
-    .activity-action-btn{
-        display:inline-block;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:999px;
-        background:var(--green-600);color:#fff;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;
+    .activity-table th{
+        text-align:left;font-size:11.5px;color:var(--t-soft);font-weight:800;
+        text-transform:uppercase;letter-spacing:.03em;padding:9px 10px;border-bottom:2px solid var(--line);
     }
-    .activity-action-btn:hover{background:var(--green-700);}
+    .activity-table td{padding:13px 10px;font-size:13.5px;color:var(--t-body);border-bottom:1px solid var(--line);vertical-align:middle;}
+    .activity-table td strong{color:var(--t-strong);}
+    .activity-table tr:last-child td{border-bottom:none;}
+    .unit-pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--green-050);color:var(--green-700);border:1px solid var(--green-100);white-space:nowrap;display:inline-block;}
+    .activity-action-btn{
+        display:inline-block;font-size:12px;font-weight:700;padding:7px 14px;border-radius:999px;
+        background:var(--green-600);color:#fff;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;text-decoration:none;text-align:center;
+    }
+    .activity-action-btn:hover{background:var(--green-700);color:#fff;}
     .activity-action-note{
-        display:inline-block;font-size:11px;font-weight:600;color:var(--ink-400);white-space:nowrap;
+        display:inline-block;font-size:12px;font-weight:600;color:var(--t-soft);
         font-style:italic;
     }
+    .activity-empty-filter{display:none;text-align:center;padding:26px 10px;font-size:13px;font-weight:600;color:var(--t-soft);}
 
     /* ---------- Attach Form modal ---------- */
-    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(7,35,26,.55);align-items:center;justify-content:center;z-index:300;padding:20px;}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(7,35,26,.55);align-items:center;justify-content:center;z-index:300;padding:16px;}
     .modal-overlay.show{display:flex;}
-    .modal-box{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:420px;padding:24px;box-shadow:0 24px 60px -20px rgba(7,35,26,.4);text-align:left;}
-    .modal-box .modal-title{font-size:16px;font-weight:800;margin-bottom:4px;}
-    .modal-box .modal-sub{font-size:12.5px;color:var(--ink-400);margin-bottom:18px;}
+    .modal-box{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:420px;max-height:calc(100vh - 32px);overflow-y:auto;padding:24px;box-shadow:0 24px 60px -20px rgba(7,35,26,.4);text-align:left;}
+    .modal-box .modal-title{font-size:16px;font-weight:800;margin-bottom:4px;color:var(--t-strong);}
+    .modal-box .modal-sub{font-size:13px;color:var(--t-soft);margin-bottom:18px;}
     .af-field{margin-bottom:14px;}
-    .af-field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-600);margin-bottom:6px;}
-    .af-field input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;background:var(--green-050);}
+    .af-field label{display:block;font-size:13px;font-weight:700;color:var(--t-body);margin-bottom:6px;}
+    .af-field input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:var(--green-050);color:var(--t-strong);}
     .af-actions{display:flex;gap:10px;margin-top:18px;}
-    .af-actions button{flex:1;padding:11px 0;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;border:1px solid var(--line);}
-    .af-cancel{background:#fff;color:var(--ink-900);}
+    .af-actions button{flex:1;padding:11px 0;border-radius:11px;font-weight:700;font-size:14px;cursor:pointer;border:1px solid var(--line);}
+    .af-cancel{background:#fff;color:var(--t-strong);}
     .af-submit{background:var(--green-600);border-color:var(--green-600);color:#fff;}
 
     /* ---------- Unavailable days & hours ---------- */
     .unavail-list{display:flex;flex-direction:column;gap:10px;}
     .unavail-row{
         display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);
-        border-radius:12px;background:var(--green-050);
+        border-radius:12px;background:var(--green-050);min-width:0;
     }
     .unavail-date{
         flex:0 0 auto;width:52px;height:52px;border-radius:10px;background:#fff;border:1px solid var(--line);
         display:flex;flex-direction:column;align-items:center;justify-content:center;
     }
-    .unavail-date .d{font-size:16px;font-weight:800;line-height:1;}
-    .unavail-date .m{font-size:10px;font-weight:700;color:var(--ink-400);text-transform:uppercase;}
+    .unavail-date .d{font-size:16px;font-weight:800;line-height:1;color:var(--t-strong);}
+    .unavail-date .m{font-size:10px;font-weight:700;color:var(--t-soft);text-transform:uppercase;}
     .unavail-info{flex:1;min-width:0;}
-    .unavail-info .title{font-size:13px;font-weight:700;}
-    .unavail-info .sub{font-size:12px;color:var(--ink-400);margin-top:2px;}
+    .unavail-info .title{font-size:13.5px;font-weight:700;color:var(--t-strong);overflow-wrap:anywhere;}
+    .unavail-info .sub{font-size:12.5px;color:var(--t-soft);margin-top:2px;overflow-wrap:anywhere;}
 
     /* ---------- Rates & activity types ---------- */
-    .rates-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;}
-    @media (max-width:760px){ .rates-grid{grid-template-columns:1fr;} }
+    .rates-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;}
+    .rates-grid > div{min-width:0;}
     .rates-table{width:100%;border-collapse:collapse;}
-    .rates-table th{text-align:left;font-size:11px;color:var(--ink-400);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);}
-    .rates-table td{padding:11px 10px;font-size:13px;border-bottom:1px solid var(--line);}
+    .rates-table th{
+        text-align:left;font-size:11.5px;color:var(--t-soft);font-weight:800;
+        text-transform:uppercase;letter-spacing:.03em;padding:9px 10px;border-bottom:2px solid var(--line);
+    }
+    .rates-table td{padding:12px 10px;font-size:13.5px;color:var(--t-body);border-bottom:1px solid var(--line);}
     .rates-table tr:last-child td{border-bottom:none;}
-    .rate-unit{display:flex;align-items:center;gap:9px;font-weight:700;}
-    .rate-dot{width:9px;height:9px;border-radius:3px;background:var(--green-500);}
+    .rate-unit{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--t-strong);}
+    .rate-dot{width:9px;height:9px;border-radius:3px;background:var(--green-500);flex:0 0 auto;}
     .activity-chips{display:flex;flex-wrap:wrap;gap:8px;}
     .activity-chip{
-        font-size:12px;font-weight:700;padding:7px 13px;border-radius:999px;
+        font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:999px;
         background:var(--green-050);color:var(--green-700);border:1px solid var(--green-100);
     }
-    .rates-subhead{font-size:12px;font-weight:700;color:var(--ink-600);margin-bottom:10px;}
+    .rates-subhead{font-size:12.5px;font-weight:800;color:var(--t-body);margin-bottom:10px;}
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+    @media (max-width:900px){
+        .rates-grid{grid-template-columns:minmax(0,1fr);gap:18px;}
+    }
+
+    @media (max-width:640px){
+        /* carousel: swipe instead of arrows, a bit tighter */
+        .carousel-arrow{display:none;}
+        .announce-slide{flex-basis:min(68%, 220px);}
+
+        /* tabs: single swipeable row instead of a messy wrap */
+        .status-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+        .status-tabs::-webkit-scrollbar{display:none;}
+        .status-tab{flex:0 0 auto;}
+
+        /* TABLES -> STACKED CARDS (activities + rates) */
+        .activity-table,.activity-table tbody,.activity-table tr,.activity-table td,
+        .rates-table,.rates-table tbody,.rates-table tr,.rates-table td{display:block;width:100%;}
+        .activity-table thead,.rates-table thead{
+            position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+        }
+        .activity-table,.rates-table{margin-top:12px;}
+
+        .activity-table tr,.rates-table tr{
+            border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin-bottom:12px;background:#fff;
+        }
+        .activity-table td,.rates-table td{
+            display:flex;align-items:center;justify-content:space-between;gap:14px;
+            padding:10px 0;text-align:right;border-bottom:1px dashed var(--line);
+        }
+        .activity-table tr:last-child td,.rates-table tr:last-child td{border-bottom:1px dashed var(--line);}
+        .activity-table td:last-child,.rates-table td:last-child{border-bottom:none;}
+
+        .activity-table td::before,.rates-table td::before{
+            content:attr(data-label);flex:0 0 34%;text-align:left;
+            font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--t-soft);
+        }
+        .activity-table td[data-label=""]::before{display:none;}
+
+        /* action cell: full-width tappable button */
+        .activity-table td[data-label=""]{display:block;padding:12px 0 8px;text-align:center;}
+        .activity-table td[data-label=""] .activity-action-btn{display:block;width:100%;padding:11px 14px;font-size:13px;}
+        .activity-table td[data-label=""] .activity-action-note{display:block;text-align:center;}
+
+        .rate-unit{justify-content:flex-end;}
+
+        /* modal: comfortable on phones, 16px inputs avoid iOS zoom */
+        .modal-box{padding:20px;}
+        .af-field input{font-size:16px;}
+    }
+
+    @media (max-width:380px){
+        .unavail-row{padding:10px;gap:10px;}
+        .unavail-date{width:46px;height:46px;}
+        .af-actions{flex-direction:column-reverse;}
+    }
 </style>
 @endpush
 
@@ -125,7 +202,7 @@
 
     @if(!empty($posters))
         <div class="announce-carousel">
-            <button type="button" class="carousel-arrow" id="announcePrev">‹</button>
+            <button type="button" class="carousel-arrow" id="announcePrev" aria-label="Previous">‹</button>
 
             <div class="announce-track" id="announceTrack">
                 @foreach($posters as $poster)
@@ -155,7 +232,7 @@
                 @endforeach
             </div>
 
-            <button type="button" class="carousel-arrow" id="announceNext">›</button>
+            <button type="button" class="carousel-arrow" id="announceNext" aria-label="Next">›</button>
         </div>
     @else
         <div class="empty-state">
@@ -195,11 +272,11 @@
             <tbody>
                 @foreach($activities as $activity)
                     <tr data-status="{{ $activity['status_key'] }}">
-                        <td><strong>{{ $activity['activity'] }}</strong></td>
-                        <td><span class="unit-pill">{{ $activity['unit'] }}</span></td>
-                        <td class="muted">{{ $activity['date_time'] }}</td>
-                        <td><span class="status-pill {{ $activity['status_key'] }}">{{ $activity['status_label'] }}</span></td>
-                        <td>
+                        <td data-label="Activity"><strong>{{ $activity['activity'] }}</strong></td>
+                        <td data-label="Unit"><span class="unit-pill">{{ $activity['unit'] }}</span></td>
+                        <td data-label="Date & Time" class="muted">{{ $activity['date_time'] }}</td>
+                        <td data-label="Status"><span class="status-pill {{ $activity['status_key'] }}">{{ $activity['status_label'] }}</span></td>
+                        <td data-label="">
                             @php($action = $activity['action'])
                             @if($action['type'] === 'link')
                                 <a href="{{ $action['route'] }}" class="activity-action-btn">{{ $action['label'] }}</a>
@@ -214,6 +291,7 @@
             </tbody>
         </table>
         </div>
+        <div class="activity-empty-filter" id="activityEmptyFilter">No activities under this status.</div>
     @else
         <div class="empty-state">
             <div class="e-icon">🗓️</div>
@@ -272,9 +350,9 @@
                     <tbody>
                         @foreach($rates as $rate)
                             <tr>
-                                <td><div class="rate-unit"><span class="rate-dot"></span>{{ $rate['unit'] }}</div></td>
-                                <td class="muted">{{ $rate['rate'] }}</td>
-                                <td class="muted">{{ $rate['note'] ?? '—' }}</td>
+                                <td data-label="Unit"><div class="rate-unit"><span class="rate-dot"></span>{{ $rate['unit'] }}</div></td>
+                                <td data-label="Rate / hr" class="muted">{{ $rate['rate'] }}</td>
+                                <td data-label="Note" class="muted">{{ $rate['note'] ?? '—' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -401,14 +479,19 @@
     (function(){
         const tabs = document.querySelectorAll('#statusTabs .status-tab');
         const rows = document.querySelectorAll('#activityTable tbody tr');
+        const emptyMsg = document.getElementById('activityEmptyFilter');
         tabs.forEach((tab) => {
             tab.addEventListener('click', () => {
                 tabs.forEach((t) => t.classList.remove('active'));
                 tab.classList.add('active');
                 const status = tab.dataset.status;
+                let visible = 0;
                 rows.forEach((row) => {
-                    row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+                    const show = (status === 'all' || row.dataset.status === status);
+                    row.style.display = show ? '' : 'none';
+                    if (show) visible++;
                 });
+                if (emptyMsg) emptyMsg.style.display = visible === 0 ? 'block' : 'none';
             });
         });
     })();

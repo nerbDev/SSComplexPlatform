@@ -70,20 +70,15 @@
                 <td class="amount">₱{{ number_format($payment->total_amount, 2) }}</td>
             </tr>
             <tr class="total-row">
-                <td>{{ $appointment->booking_type === 'room_reservation' ? "Downpayment ({$payment->downpayment_percent}%)" : 'Full Payment' }}</td>
+                <td>Full Payment</td>
                 <td class="amount">₱{{ number_format($payment->downpayment_amount, 2) }}</td>
             </tr>
-            @if($appointment->booking_type === 'room_reservation')
-                <tr>
-                    <td>Remaining Balance — due {{ optional($payment->balance_due_date)->format('F j, Y') }}</td>
-                    <td class="amount">₱{{ number_format($payment->balance_amount, 2) }}</td>
-                </tr>
-            @endif
         </tbody>
     </table>
 
     <div class="section-title">III. PAYMENT REFERENCE</div>
     <table class="meta-table">
+        <tr><td class="label">Paid By</td><td colspan="3">{{ $payeeName ?: '—' }}</td></tr>
         <tr><td class="label">GCash Reference</td><td colspan="3">{{ $payment->gcash_reference }}</td></tr>
     </table>
 

@@ -297,6 +297,7 @@
             <nav class="nav">
                 <a class="nav-item {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}" href="{{ route('staff.dashboard') }}"><span class="ic">▦</span> Dashboard</a>
                 <a class="nav-item {{ request()->routeIs('staff.verify*') ? 'active' : '' }}" href="{{ route('staff.verify.index') }}"><span class="ic">✔</span> Verify @if(($pendingVerificationCount ?? 0) > 0)<span class="badge">{{ $pendingVerificationCount }}</span>@endif</a>
+                <a class="nav-item {{ request()->routeIs('staff.assignments*') ? 'active' : '' }}" href="{{ route('staff.assignments.index') }}"><span class="ic">🗓</span> My Assignments</a>
             </nav>
         </div>
 
