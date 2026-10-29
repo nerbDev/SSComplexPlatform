@@ -19,8 +19,8 @@
             --orange-500:#ef8d3d;
             --orange-100:#fdece0;
             --ink-900:#0e1c17;
-            --ink-600:#5b6b64;
-            --ink-400:#93a29c;
+            --ink-600:#34443d;
+            --ink-400:#55655e;
             --line:#e4ece8;
             --card:#ffffff;
             --radius-lg:18px;
@@ -34,6 +34,7 @@
             background:var(--green-050);
             color:var(--ink-900);
             position:relative;
+            -webkit-font-smoothing:antialiased;
         }
         body::before{
             content:'';
@@ -46,100 +47,180 @@
         }
         a{text-decoration:none;color:inherit;}
 
-        /* ---------- Sidebar: overlay, closed by default, every screen size ---------- */
+        /* ---------- Sidebar: floating glass panel, overlay, closed by default on every screen size ---------- */
         .sidebar{
-            width:248px;
-            background:var(--green-950);
-            color:#eaf6f0;
-            padding:22px 16px;
+            width:272px;
+            max-width:calc(100vw - 24px);
+            position:fixed;
+            left:12px;top:12px;bottom:12px;
+            z-index:200;
             display:flex;
             flex-direction:column;
-            gap:22px;
-            position:fixed;
-            left:0;top:0;
-            height:100vh;
-            z-index:200;
-            transform:translateX(-100%);
-            transition:transform .25s ease;
-            box-shadow:0 0 40px rgba(0,0,0,.25);
+            gap:18px;
+            padding:18px 14px 14px;
+            color:#eaf6f0;
+            background:
+                linear-gradient(160deg, rgba(31,174,116,.22), rgba(7,35,26,0) 45%),
+                rgba(7,35,26,.62);
+            backdrop-filter:blur(26px) saturate(170%);
+            -webkit-backdrop-filter:blur(26px) saturate(170%);
+            border:1px solid rgba(255,255,255,.16);
+            border-radius:24px;
+            box-shadow:0 24px 60px -18px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.14);
+            overflow-y:auto;
+            overscroll-behavior:contain;
+            scrollbar-width:none;
+            transform:translateX(calc(-100% - 24px));
+            opacity:0;
+            visibility:hidden;
+            transition:transform .3s cubic-bezier(.22,.8,.3,1), opacity .25s ease, visibility 0s linear .3s;
         }
-        .sidebar.open{transform:translateX(0);}
+        .sidebar::-webkit-scrollbar{display:none;}
+        .sidebar.open{
+            transform:none;
+            opacity:1;
+            visibility:visible;
+            transition:transform .3s cubic-bezier(.22,.8,.3,1), opacity .25s ease, visibility 0s;
+        }
         .sidebar-overlay{
             display:none;
-            position:fixed;inset:0;background:rgba(7,35,26,.5);
+            position:fixed;inset:0;
+            background:rgba(7,35,26,.45);
+            backdrop-filter:blur(3px);
+            -webkit-backdrop-filter:blur(3px);
             z-index:190;
         }
         .sidebar-overlay.show{display:block;}
 
-        .brand{display:flex;align-items:center;justify-content:space-between;}
-        .brand-left{display:flex;align-items:center;gap:10px;}
+        .brand{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px;}
+        .brand-left{display:flex;align-items:center;gap:11px;min-width:0;}
         .brand-mark{
-            width:26px;height:26px;border-radius:7px;
+            width:34px;height:34px;border-radius:11px;flex-shrink:0;
             background:linear-gradient(135deg,var(--green-500),var(--green-700));
-            flex-shrink:0;
+            box-shadow:0 8px 20px -6px rgba(31,174,116,.8), inset 0 1px 0 rgba(255,255,255,.35);
         }
-        .brand-name{font-weight:800;font-size:15px;letter-spacing:.2px;}
+        .brand-name{font-weight:800;font-size:14.5px;letter-spacing:.2px;line-height:1.2;}
+        .brand-sub{font-size:11px;font-weight:600;color:rgba(234,246,240,.6);margin-top:1px;}
         .sidebar-close{
-            width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.08);
-            border:none;color:#eaf6f0;display:flex;align-items:center;justify-content:center;
-            font-size:14px;cursor:pointer;
+            width:30px;height:30px;border-radius:10px;flex-shrink:0;
+            background:rgba(255,255,255,.08);
+            border:1px solid rgba(255,255,255,.1);
+            color:#eaf6f0;display:flex;align-items:center;justify-content:center;
+            font-size:13px;cursor:pointer;
+            transition:background .15s ease;
         }
+        .sidebar-close:hover{background:rgba(255,255,255,.16);}
 
         .workspace{
-            background:rgba(255,255,255,.06);
-            border:1px solid rgba(255,255,255,.08);
-            border-radius:var(--radius-md);
+            background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.1);
+            border-radius:14px;
             padding:10px 12px;
             display:flex;
             align-items:center;
-            gap:9px;
+            gap:10px;
             font-size:13px;
         }
-        .workspace .dot{width:8px;height:8px;border-radius:50%;background:var(--green-500);}
-        .workspace .ws-label{color:#9fb3ab;font-size:11px;display:block;}
+        .workspace .dot{
+            width:8px;height:8px;border-radius:50%;flex-shrink:0;
+            background:var(--green-500);
+            box-shadow:0 0 0 4px rgba(31,174,116,.22);
+        }
+        .workspace .ws-label{color:rgba(234,246,240,.6);font-size:11px;display:block;}
         .workspace .ws-name{font-weight:700;}
 
-        .nav-section-label{
-            font-size:10.5px;letter-spacing:.06em;color:#6f8479;
-            margin:4px 0 -8px 10px;
+        .search-box{
+            display:flex;align-items:center;gap:9px;
+            background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.1);
+            border-radius:14px;
+            padding:10px 12px;
+            font-size:13px;
+            color:rgba(234,246,240,.65);
         }
-        .nav{display:flex;flex-direction:column;gap:2px;}
-        .nav-item{
-            display:flex;align-items:center;gap:10px;
-            padding:10px 12px;border-radius:10px;
-            font-size:13.5px;font-weight:600;color:#c7d6cf;
-            cursor:pointer;
-        }
-        .nav-item .ic{width:17px;text-align:center;opacity:.85;}
-        .nav-item:hover{background:rgba(255,255,255,.05);}
-        .nav-item.active{
-            background:var(--green-600);
-            color:#fff;
-            box-shadow:0 6px 16px -6px rgba(23,138,94,.7);
+        .search-box .s-ic{font-size:13px;opacity:.8;}
+        .search-box kbd{
+            margin-left:auto;font-family:inherit;font-size:10px;
+            background:rgba(255,255,255,.1);
+            padding:2px 6px;border-radius:6px;color:#d3e2db;
         }
 
-        .sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:14px;}
+        .nav-group{display:flex;flex-direction:column;}
+        .nav-section-label{
+            font-size:10.5px;font-weight:700;letter-spacing:.09em;
+            color:rgba(234,246,240,.45);
+            margin:0 0 8px 10px;
+        }
+        .nav{display:flex;flex-direction:column;gap:4px;}
+        .nav-item{
+            position:relative;
+            display:flex;align-items:center;gap:12px;
+            padding:7px 10px;border-radius:14px;
+            font-size:13.5px;font-weight:600;color:#d3e2db;
+            cursor:pointer;
+            border:1px solid transparent;
+            transition:background .18s ease, color .18s ease, transform .18s ease;
+        }
+        .nav-item .ic{
+            width:32px;height:32px;border-radius:10px;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            font-size:15px;
+            background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.08);
+            transition:background .18s ease, border-color .18s ease;
+        }
+        .nav-item:hover{background:rgba(255,255,255,.09);color:#fff;transform:translateX(2px);}
+        .nav-item:hover .ic{background:rgba(255,255,255,.14);}
+        .nav-item.active{
+            color:#fff;
+            background:linear-gradient(135deg, rgba(31,174,116,.55), rgba(23,138,94,.30));
+            border-color:rgba(255,255,255,.18);
+            box-shadow:0 10px 22px -12px rgba(31,174,116,.9), inset 0 1px 0 rgba(255,255,255,.2);
+        }
+        .nav-item.active:hover{transform:none;}
+        .nav-item.active .ic{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.25);}
+        .nav-item.active::before{
+            content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+            width:4px;height:20px;border-radius:0 4px 4px 0;background:var(--green-500);
+        }
+        .nav-item .badge{
+            margin-left:auto;background:var(--orange-500);color:#fff;
+            font-size:10px;font-weight:700;border-radius:999px;
+            padding:2px 8px;
+        }
+        .nav-item .badge.new{background:#fff;color:var(--green-800);}
+
+        .sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:12px;}
         .user-chip{
-            display:flex;align-items:center;gap:10px;
-            padding:8px 6px;border-top:1px solid rgba(255,255,255,.08);
-            padding-top:16px;
+            display:flex;align-items:center;gap:11px;
+            padding:10px;
+            background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.1);
+            border-radius:16px;
         }
         .avatar{
-            width:32px;height:32px;border-radius:9px;
+            width:36px;height:36px;border-radius:11px;flex-shrink:0;
             background:linear-gradient(135deg,var(--green-500),var(--orange-500));
-            flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            font-size:14px;font-weight:800;color:#fff;
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
         }
         .user-chip .u-info{flex:1;min-width:0;}
-        .user-chip .u-name{font-size:13px;font-weight:700;}
-        .user-chip .u-id{font-size:11px;color:#8ea299;}
+        .user-chip .u-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .user-chip .u-id{font-size:11px;color:rgba(234,246,240,.6);}
         .logout-btn{
-            width:32px;height:32px;border-radius:9px;flex-shrink:0;
+            width:34px;height:34px;border-radius:11px;flex-shrink:0;
             display:flex;align-items:center;justify-content:center;
-            background:rgba(239,141,61,.14);color:var(--orange-500);
-            border:1px solid rgba(239,141,61,.25);cursor:pointer;font-size:14px;
+            background:rgba(239,141,61,.16);color:var(--orange-500);
+            border:1px solid rgba(239,141,61,.3);cursor:pointer;font-size:14px;
             transition:background .15s ease;
         }
-        .logout-btn:hover{background:rgba(239,141,61,.24);}
+        .logout-btn:hover{background:rgba(239,141,61,.28);}
+
+        @media (prefers-reduced-motion: reduce){
+            .sidebar,.sidebar.open,.nav-item,.nav-item .ic{transition:none;}
+            .nav-item:hover{transform:none;}
+        }
 
         /* ---------- Logout confirm modal ---------- */
         .modal-overlay{
@@ -200,7 +281,7 @@
         }
 
         .card{
-            background:rgba(255,255,255,.58);
+            background:rgba(255,255,255,.80);
             backdrop-filter:blur(20px) saturate(160%);
             -webkit-backdrop-filter:blur(20px) saturate(160%);
             border:1px solid rgba(255,255,255,.45);
@@ -235,6 +316,13 @@
 
         .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 
+        /* readability on glass: text inside cards, charts and tables never fades out.
+           :where() keeps these as low-priority defaults so page styles can still override them. */
+        .card{color:var(--ink-900);}
+        :where(.card) th{color:var(--ink-600);font-weight:800;}
+        :where(.card) td{color:var(--ink-900);}
+        .card .muted,.card .sub{color:var(--ink-600);}
+
         @media (max-width: 560px){
             .main{padding:18px 16px 32px;}
             .page-title{font-size:19px;}
@@ -247,13 +335,16 @@
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
     <div class="brand">
         <div class="brand-left">
             <div class="brand-mark"></div>
-            <div class="brand-name">SSComplexPlatform</div>
+            <div>
+                <div class="brand-name">SSComplexPlatform</div>
+                <div class="brand-sub">Client Portal</div>
+            </div>
         </div>
-        <button type="button" class="sidebar-close" onclick="closeSidebar()">✕</button>
+        <button type="button" class="sidebar-close" onclick="closeSidebar()" aria-label="Close menu">✕</button>
     </div>
 
     <div class="workspace">
@@ -264,7 +355,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="nav-group">
         <div class="nav-section-label">NAVIGATION</div>
         <nav class="nav">
             <a class="nav-item {{ request()->routeIs('client.dashboard') ? 'active' : '' }}" href="{{ route('client.dashboard') }}"><span class="ic">▦</span> Dashboard</a>
@@ -276,12 +367,12 @@
     <div class="sidebar-bottom">
         <a class="nav-item"><span class="ic">⚙</span> Settings</a>
         <div class="user-chip">
-            <div class="avatar"></div>
+            <div class="avatar">{{ strtoupper(substr(auth()->user()->first_name ?? 'C', 0, 1)) }}</div>
             <div class="u-info">
                 <div class="u-name">{{ auth()->user()->first_name ?? 'Client' }}</div>
                 <div class="u-id">#{{ auth()->user()->id ?? '0000' }}</div>
             </div>
-            <button type="button" class="logout-btn" title="Log out" onclick="openLogoutModal()">⏻</button>
+            <button type="button" class="logout-btn" title="Log out" onclick="openLogoutModal()" aria-label="Log out">⏻</button>
         </div>
     </div>
 </aside>
@@ -305,7 +396,7 @@
 <main class="main">
     <div class="topbar">
         <div class="topbar-left">
-            <button type="button" class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <button type="button" class="hamburger-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
             <div class="page-title">@yield('title', 'Dashboard')</div>
         </div>
         <div class="topbar-actions">
@@ -320,10 +411,12 @@
     function openSidebar(){
         document.getElementById('sidebar').classList.add('open');
         document.getElementById('sidebarOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
     }
     function closeSidebar(){
         document.getElementById('sidebar').classList.remove('open');
         document.getElementById('sidebarOverlay').classList.remove('show');
+        document.body.style.overflow = '';
     }
     function openLogoutModal(){
         document.getElementById('logoutModal').classList.add('show');
