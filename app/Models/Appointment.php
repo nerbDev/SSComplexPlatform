@@ -15,6 +15,7 @@ class Appointment extends Model
         'event_date', 'start_time', 'end_time', 'expected_attendees',
         'approval_form_path', 'approval_form_submitted_at', 'approval_form_submitted_by',
         'notes', 'verified_by', 'verified_at',
+        'cancelled_at', 'cancelled_by', 'cancelled_by_role', 'cancellation_reason',
     ];
 
     protected $casts = [
@@ -22,6 +23,7 @@ class Appointment extends Model
         'verified_at'                 => 'datetime',
         'aircon'                      => 'boolean',
         'approval_form_submitted_at'  => 'datetime',
+        'cancelled_at'                => 'datetime',
     ];
 
     public function client()
@@ -44,6 +46,11 @@ class Appointment extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
     public function commitmentAcknowledgment()
     {
         return $this->hasOne(CommitmentAcknowledgment::class);
@@ -52,6 +59,11 @@ class Appointment extends Model
     public function payment()
     {
         return $this->hasOne(Payment::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(Refund::class);
     }
 
     public function reschedulingFees()

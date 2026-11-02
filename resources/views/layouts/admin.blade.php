@@ -220,6 +220,49 @@
         }
         .logout-btn:hover{background:rgba(239,141,61,.28);}
 
+        /* ---------- Focus-area switcher (admin_type dropdown) ---------- */
+        .focus-btn{
+            width:100%;display:flex;align-items:center;gap:10px;
+            padding:10px 12px;border-radius:14px;
+            background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.1);
+            color:#eaf6f0;font-family:inherit;text-align:left;cursor:pointer;
+            transition:background .18s ease;
+        }
+        .focus-btn:hover{background:rgba(255,255,255,.12);}
+        .focus-btn:disabled{cursor:default;}
+        .focus-btn:disabled:hover{background:rgba(255,255,255,.07);}
+        .focus-btn .f-ic{
+            width:30px;height:30px;border-radius:10px;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;font-size:14px;
+            background:linear-gradient(135deg, rgba(31,174,116,.6), rgba(23,138,94,.35));
+            border:1px solid rgba(255,255,255,.18);
+        }
+        .focus-btn .f-text{flex:1;min-width:0;}
+        .focus-btn .f-label{display:block;font-size:11px;color:rgba(234,246,240,.6);}
+        .focus-btn .f-name{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .focus-btn .chev{font-size:11px;opacity:.8;transition:transform .2s ease;}
+        .focus.open .focus-btn .chev{transform:rotate(180deg);}
+        .focus-menu{
+            display:none;flex-direction:column;gap:4px;margin-top:6px;padding:6px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.1);
+            border-radius:14px;
+        }
+        .focus.open .focus-menu{display:flex;}
+        .focus-menu form{margin:0;}
+        .focus-opt{
+            width:100%;display:flex;align-items:center;gap:10px;
+            padding:8px 10px;border-radius:10px;
+            background:transparent;border:1px solid transparent;
+            color:#d3e2db;font-family:inherit;font-size:13px;font-weight:600;
+            text-align:left;cursor:pointer;
+        }
+        .focus-opt:hover{background:rgba(255,255,255,.1);color:#fff;}
+        .focus-opt.current{background:rgba(31,174,116,.3);border-color:rgba(255,255,255,.16);color:#fff;cursor:default;}
+        .focus-opt .tick{margin-left:auto;opacity:0;font-size:12px;}
+        .focus-opt.current .tick{opacity:1;}
+
         @media (prefers-reduced-motion: reduce){
             .sidebar,.sidebar.open,.nav-item,.nav-item .ic{transition:none;}
             .nav-item:hover{transform:none;}
@@ -370,6 +413,42 @@
         </div>
     </div>
 
+    @if(auth()->user()->role === 'admin')
+        @php
+            $adminTypes  = config('ssc.admin_types', []);
+            $currentType = auth()->user()->admin_type;
+            $currentInfo = $adminTypes[$currentType] ?? null;
+            $canSwitch   = config('ssc.admin_type_switching', true) && count($adminTypes) > 1;
+        @endphp
+        <div class="focus" id="focusSwitch">
+            <button type="button" class="focus-btn" id="focusBtn"
+                    @if($canSwitch) onclick="toggleFocus()" aria-expanded="false" aria-controls="focusMenu" @else disabled @endif>
+                <span class="f-ic">{{ $currentInfo['icon'] ?? '◎' }}</span>
+                <span class="f-text">
+                    <span class="f-label">Focus area</span>
+                    <span class="f-name">{{ $currentInfo['label'] ?? 'Not set' }}</span>
+                </span>
+                @if($canSwitch)<span class="chev">▾</span>@endif
+            </button>
+
+            @if($canSwitch)
+                <div class="focus-menu" id="focusMenu">
+                    @foreach($adminTypes as $key => $info)
+                        @if($key === $currentType)
+                            <button type="button" class="focus-opt current" disabled><span>{{ $info['icon'] }}</span> {{ $info['label'] }} <span class="tick">✔</span></button>
+                        @else
+                            <form method="POST" action="{{ route('admin.focus.switch') }}">
+                                @csrf
+                                <input type="hidden" name="admin_type" value="{{ $key }}">
+                                <button type="submit" class="focus-opt"><span>{{ $info['icon'] }}</span> {{ $info['label'] }} <span class="tick">✔</span></button>
+                            </form>
+                        @endif
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @endif
+
     <div class="search-box">
         <span class="s-ic">🔍</span>
         <span>Search for...</span>
@@ -386,6 +465,19 @@
             {{-- <a class="nav-item {{ request()->routeIs('admin.staff*') ? 'active' : '' }}" href="{{ route('admin.staff.index') }}"><span class="ic">👤</span> Staff Accounts</a> --}}
         </nav>
     </div>
+
+    @if(auth()->user()->admin_type === 'operation_building')
+    <div class="nav-group">
+        <div class="nav-section-label">OB ADMIN</div>
+        <nav class="nav">
+            <a class="nav-item {{ request()->routeIs('admin.ob.event-reports*') ? 'active' : '' }}" href="{{ route('admin.ob.event-reports.index') }}"><span class="ic">📊</span> Event Reports</a>
+            <a class="nav-item {{ request()->routeIs('admin.ob.damaged-items*') ? 'active' : '' }}" href="{{ route('admin.ob.damaged-items.index') }}"><span class="ic">🛠</span> Damaged Items</a>
+            <a class="nav-item {{ request()->routeIs('admin.ob.refunds*') ? 'active' : '' }}" href="{{ route('admin.ob.refunds.index') }}"><span class="ic">💸</span> Refunds</a>
+            <a class="nav-item {{ request()->routeIs('admin.ob.cancellations*') ? 'active' : '' }}" href="{{ route('admin.ob.cancellations.index') }}"><span class="ic">🗂</span> Cancellations</a>
+            <a class="nav-item {{ request()->routeIs('admin.ob.ingress*') ? 'active' : '' }}" href="{{ route('admin.ob.ingress.index') }}"><span class="ic">🧾</span> Ingress &amp; Tax</a>
+        </nav>
+    </div>
+    @endif
 
     <div class="nav-group">
         <div class="nav-section-label">INSIGHTS &amp; HELP</div>
@@ -438,6 +530,12 @@
         </div>
     </div>
 
+    @if(session('focus_status'))
+        <div class="dropdown-chip" style="margin-bottom:18px;background:var(--green-100);color:var(--green-700);border-color:var(--green-500);font-weight:700;cursor:default;">
+            {{ session('focus_status') }}
+        </div>
+    @endif
+
     @yield('content')
 </main>
 
@@ -447,7 +545,15 @@
         document.getElementById('sidebarOverlay').classList.add('show');
         document.body.style.overflow = 'hidden';
     }
+    function toggleFocus(){
+        const box = document.getElementById('focusSwitch');
+        if (!box) return;
+        const open = box.classList.toggle('open');
+        document.getElementById('focusBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
     function closeSidebar(){
+        const focus = document.getElementById('focusSwitch');
+        if (focus) focus.classList.remove('open');
         document.getElementById('sidebar').classList.remove('open');
         document.getElementById('sidebarOverlay').classList.remove('show');
         document.body.style.overflow = '';

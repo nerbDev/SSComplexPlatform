@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\AuditLog;
+use App\Services\AppointmentCancellationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +39,10 @@ class MyAppointmentController extends Controller
         'room_reservation' => 'Room Reservation',
         'free_use'         => 'Free Use',
     ];
+
+    public function __construct(private AppointmentCancellationService $cancellation)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -81,31 +85,7 @@ class MyAppointmentController extends Controller
 
         $data   = $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
         $reason = $data['reason'] ?? null;
-        $from   = $appointment->status;
-
-        DB::transaction(function () use ($appointment, $reason, $from) {
-            $appointment->update([
-                'status' => 'cancelled',
-                'notes'  => $reason
-                    ? trim($appointment->notes . " | Client cancellation reason: {$reason}")
-                    : $appointment->notes,
-            ]);
-
-            // Free up any staff the admin had already assigned.
-            DB::table('staff_assignments')
-                ->where('appointment_id', $appointment->id)
-                ->where('status', 'assigned')
-                ->update(['status' => 'cancelled', 'updated_at' => now()]);
-
-            // Drop an unpaid reschedule request (a paid one stays as a payment record).
-            $appointment->reschedulingFees()->where('status', 'pending')->update(['status' => 'cancelled']);
-
-            AuditLog::record(
-                'client.appointment.cancelled',
-                $appointment,
-                "Client cancelled \"{$appointment->activity_title}\" (was {$from}); no refund" . ($reason ? " — {$reason}" : '')
-            );
-        });
+        $this->cancellation->cancel($appointment, $reason, Auth::user(), 'client');
 
         return redirect()
             ->route('client.appointments.index')

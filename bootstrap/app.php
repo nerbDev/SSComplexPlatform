@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\EnsureAdminType;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => RoleMiddleware::class,
+            'role'       => RoleMiddleware::class,
+            // Used by the OB Admin routes: ->middleware(['role:admin', 'admin_type:operation_building'])
+            'admin_type' => EnsureAdminType::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -37,4 +37,14 @@ class IncidentReport extends Model
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
+
+    public function damageDecisions()
+    {
+        return $this->hasMany(DamageDecision::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(Refund::class);
+    }
 }

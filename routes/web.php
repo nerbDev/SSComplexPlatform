@@ -7,6 +7,12 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PosterController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Admin\AppointmentStaffController;
+use App\Http\Controllers\Admin\AdminTypeController;
+use App\Http\Controllers\Admin\OperationBuilding\EventReportController;
+use App\Http\Controllers\Admin\OperationBuilding\DamagedItemController;
+use App\Http\Controllers\Admin\OperationBuilding\RefundController;
+use App\Http\Controllers\Admin\OperationBuilding\CancellationController;
+use App\Http\Controllers\Admin\OperationBuilding\IngressTaxController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\ReservationController;
 use App\Http\Controllers\Client\PaymentController;
@@ -35,6 +41,45 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/appointments/{appointment}/staff', [AppointmentStaffController::class, 'index'])->name('appointments.staff.index');
     Route::post('/appointments/{appointment}/staff/{staff}', [AppointmentStaffController::class, 'assign'])->name('appointments.staff.assign');
     Route::delete('/appointments/{appointment}/staff/{staff}', [AppointmentStaffController::class, 'unassign'])->name('appointments.staff.unassign');
+});
+
+// Admin focus-area switcher (sidebar dropdown): changes the logged-in admin's own admin_type.
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::post('/focus-area', [AdminTypeController::class, 'update'])->name('focus.switch');
+});
+
+// ---------------------------------------------------------------------------------------------
+// Sprint 8 — OB Admin specialized panel (role:admin + admin_type:operation_building only).
+// ---------------------------------------------------------------------------------------------
+Route::middleware(['auth', 'role:admin', 'admin_type:operation_building'])->prefix('admin/ob')->name('admin.ob.')->group(function () {
+    // Event reports (per-event view). /export must stay above /{appointment}.
+    Route::get('/event-reports', [EventReportController::class, 'index'])->name('event-reports.index');
+    Route::get('/event-reports/export', [EventReportController::class, 'export'])->name('event-reports.export');
+    Route::get('/event-reports/{appointment}', [EventReportController::class, 'show'])->name('event-reports.show');
+
+    // Damaged items — the authority-to-act side of staff incident reports.
+    Route::get('/damaged-items', [DamagedItemController::class, 'index'])->name('damaged-items.index');
+    Route::get('/damaged-items/{incident}', [DamagedItemController::class, 'show'])->name('damaged-items.show');
+    Route::post('/damaged-items/{incident}/review', [DamagedItemController::class, 'startReview'])->name('damaged-items.review');
+    Route::post('/damaged-items/{incident}/decisions', [DamagedItemController::class, 'storeDecision'])->name('damaged-items.decisions.store');
+    Route::delete('/damaged-items/{incident}/decisions/{decision}', [DamagedItemController::class, 'destroyDecision'])->name('damaged-items.decisions.destroy');
+    Route::post('/damaged-items/{incident}/resolve', [DamagedItemController::class, 'resolve'])->name('damaged-items.resolve');
+    Route::post('/damaged-items/{incident}/reopen', [DamagedItemController::class, 'reopen'])->name('damaged-items.reopen');
+
+    // Refunds: pending -> approved -> released (or rejected).
+    Route::get('/refunds', [RefundController::class, 'index'])->name('refunds.index');
+    Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
+    Route::post('/refunds/{refund}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
+    Route::post('/refunds/{refund}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
+    Route::post('/refunds/{refund}/release', [RefundController::class, 'release'])->name('refunds.release');
+
+    // Cancellations: history + cancel on a client's behalf.
+    Route::get('/cancellations', [CancellationController::class, 'index'])->name('cancellations.index');
+    Route::post('/cancellations/{appointment}', [CancellationController::class, 'cancel'])->name('cancellations.cancel');
+
+    // Ingress fee / tax oversight (read-only).
+    Route::get('/ingress-tax', [IngressTaxController::class, 'index'])->name('ingress.index');
+    Route::get('/ingress-tax/export', [IngressTaxController::class, 'export'])->name('ingress.export');
 });
 
 Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->group(function () {
