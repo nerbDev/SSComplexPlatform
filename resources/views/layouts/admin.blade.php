@@ -479,6 +479,17 @@
     </div>
     @endif
 
+    @if(auth()->user()->admin_type === 'sports_activity')
+    <div class="nav-group">
+        <div class="nav-section-label">SPORTS &amp; ACTIVITY</div>
+        <nav class="nav">
+            <a class="nav-item {{ request()->routeIs('admin.sa.inventory*') ? 'active' : '' }}" href="{{ route('admin.sa.inventory.index') }}"><span class="ic">📦</span> Inventory</a>
+            <a class="nav-item {{ request()->routeIs('admin.sa.maintenance*') ? 'active' : '' }}" href="{{ route('admin.sa.maintenance.index') }}"><span class="ic">🔧</span> Maintenance</a>
+            <a class="nav-item {{ request()->routeIs('admin.sa.reports*') ? 'active' : '' }}" href="{{ route('admin.sa.reports.index') }}"><span class="ic">📈</span> Inventory Reports</a>
+        </nav>
+    </div>
+    @endif
+
     <div class="nav-group">
         <div class="nav-section-label">INSIGHTS &amp; HELP</div>
         <nav class="nav">

@@ -13,6 +13,9 @@ use App\Http\Controllers\Admin\OperationBuilding\DamagedItemController;
 use App\Http\Controllers\Admin\OperationBuilding\RefundController;
 use App\Http\Controllers\Admin\OperationBuilding\CancellationController;
 use App\Http\Controllers\Admin\OperationBuilding\IngressTaxController;
+use App\Http\Controllers\Admin\SportsActivity\InventoryOverviewController;
+use App\Http\Controllers\Admin\SportsActivity\MaintenanceController;
+use App\Http\Controllers\Admin\SportsActivity\ReportController as SportsReportController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\ReservationController;
 use App\Http\Controllers\Client\PaymentController;
@@ -80,6 +83,30 @@ Route::middleware(['auth', 'role:admin', 'admin_type:operation_building'])->pref
     // Ingress fee / tax oversight (read-only).
     Route::get('/ingress-tax', [IngressTaxController::class, 'index'])->name('ingress.index');
     Route::get('/ingress-tax/export', [IngressTaxController::class, 'export'])->name('ingress.export');
+});
+
+// ---------------------------------------------------------------------------------------------
+// Sprint 9 — Sports/Activity Admin specialized panel (role:admin + admin_type:sports_activity only).
+// ---------------------------------------------------------------------------------------------
+Route::middleware(['auth', 'role:admin', 'admin_type:sports_activity'])->prefix('admin/sa')->name('admin.sa.')->group(function () {
+    // Inventory overview (admin-side view; staff enter items in Sprint 10).
+    Route::get('/inventory', [InventoryOverviewController::class, 'index'])->name('inventory.index');
+
+    // Maintenance overview + scheduling: scheduled -> in_progress -> completed (or cancelled).
+    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+    Route::post('/maintenance', [MaintenanceController::class, 'store'])->name('maintenance.store');
+    Route::put('/maintenance/{schedule}', [MaintenanceController::class, 'update'])->name('maintenance.update');
+    Route::post('/maintenance/{schedule}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
+    Route::post('/maintenance/{schedule}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
+    Route::post('/maintenance/{schedule}/cancel', [MaintenanceController::class, 'cancel'])->name('maintenance.cancel');
+
+    // Staff-filed maintenance reports: mark in progress / resolve (scheduling one links the job to the report).
+    Route::post('/maintenance/reports/{report}/progress', [MaintenanceController::class, 'progressReport'])->name('maintenance.reports.progress');
+    Route::post('/maintenance/reports/{report}/resolve', [MaintenanceController::class, 'resolveReport'])->name('maintenance.reports.resolve');
+
+    // Reports scoped to inventory/maintenance. /export must stay a distinct path.
+    Route::get('/reports', [SportsReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export', [SportsReportController::class, 'export'])->name('reports.export');
 });
 
 Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->group(function () {
