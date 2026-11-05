@@ -25,6 +25,8 @@ use App\Http\Controllers\Client\RescheduleController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\VerifyController;
 use App\Http\Controllers\Staff\AssignmentController as StaffAssignmentController;
+use App\Http\Controllers\Staff\ReportingController as StaffReportingController;
+use App\Http\Controllers\Staff\InventoryController as StaffInventoryController;
 
 // route to view admin dashboard
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -158,6 +160,18 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
 
     // Appointments this staff member was assigned to (+ who else is on the team).
     Route::get('/assignments', [StaffAssignmentController::class, 'index'])->name('assignments.index');
+
+    // Sprint 10 — staff-facing capture. Incident/damage reports feed the OB Admin's Damaged Items;
+    // facility-condition reports feed the Sports/Activity Admin's Reported issues.
+    Route::get('/reports', [StaffReportingController::class, 'index'])->name('reports.index');
+    Route::post('/reports/incident', [StaffReportingController::class, 'storeIncident'])->name('reports.incident.store');
+    Route::post('/reports/maintenance', [StaffReportingController::class, 'storeMaintenance'])->name('reports.maintenance.store');
+
+    // Equipment inventory (stocks) entry — feeds the Sports/Activity Admin's inventory overview.
+    Route::get('/inventory', [StaffInventoryController::class, 'index'])->name('inventory.index');
+    Route::post('/inventory', [StaffInventoryController::class, 'store'])->name('inventory.store');
+    Route::put('/inventory/{item}', [StaffInventoryController::class, 'update'])->name('inventory.update');
+    Route::post('/inventory/{item}/check', [StaffInventoryController::class, 'check'])->name('inventory.check');
 });
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
