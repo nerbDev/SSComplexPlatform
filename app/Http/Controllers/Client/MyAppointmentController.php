@@ -55,7 +55,7 @@ class MyAppointmentController extends Controller
             'history' => $mine()->whereIn('status', self::HISTORY)->count(),
         ];
 
-        $query = $mine()->with(['facility', 'payment', 'reschedulingFees']);
+        $query = $mine()->with(['facility', 'payment', 'reschedulingFees', 'feedback']);
 
         if ($tab === 'history') {
             $query->whereIn('status', self::HISTORY)->orderByDesc('event_date')->orderByDesc('start_time');
@@ -133,6 +133,8 @@ class MyAppointmentController extends Controller
             'fee_preview'     => $feePreview,
             'open_reschedule' => $openFee ? ($openFee->status === 'pending' ? 'Reschedule awaiting payment' : 'Reschedule awaiting receipt confirmation') : null,
             'continue_url'    => $continueUrl,
+            'feedback_url'    => ($a->status === 'finished' && !$a->feedback) ? route('client.appointments.feedback', $a) : null,
+            'has_feedback'    => $a->status === 'finished' && (bool) $a->feedback,
             'cancel_url'      => route('client.appointments.cancel', $a),
             'reschedule_url'  => route('client.appointments.reschedule', $a),
         ];

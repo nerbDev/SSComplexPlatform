@@ -116,7 +116,11 @@
                                 @if($row['can_cancel'])
                                     <button type="button" class="btn-cancel-row" onclick="openCancel({{ $row['id'] }})">Cancel</button>
                                 @endif
-                                @if(!$row['can_cancel'] && !$row['can_reschedule'] && !$row['continue_url'])
+                                @if($row['feedback_url'])
+                                    <a class="btn btn-resched" href="{{ $row['feedback_url'] }}">Give feedback</a>
+                                @elseif($row['has_feedback'])
+                                    <span class="sub">Feedback sent ✓</span>
+                                @elseif(!$row['can_cancel'] && !$row['can_reschedule'] && !$row['continue_url'])
                                     <span class="sub">—</span>
                                 @endif
                             </div>

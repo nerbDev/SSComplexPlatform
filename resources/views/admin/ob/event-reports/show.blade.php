@@ -50,7 +50,10 @@
             <div class="d-row"><span class="d-label">Expected attendees</span><span class="d-value">{{ $a->expected_attendees ?? '—' }}</span></div>
             <div class="d-row"><span class="d-label">Visitor log entries</span><span class="d-value">{{ $visitorCount }}</span></div>
             <div class="d-row"><span class="d-label">Verified by</span><span class="d-value">{{ $a->verifiedBy ? trim($a->verifiedBy->first_name . ' ' . $a->verifiedBy->last_name) : '—' }}</span></div>
-            <div class="d-row"><span class="d-label">Client feedback</span><span class="d-value">{{ $a->feedback ? 'Submitted' : 'None yet' }}</span></div>
+            <div class="d-row"><span class="d-label">Client feedback</span><span class="d-value">{{ $a->feedback ? ($a->feedback->rating ? $a->feedback->rating . ' / 5' : 'Submitted') : 'None yet' }}</span></div>
+            @if($a->feedback && $a->feedback->comments)
+                <div class="d-row"><span class="d-label">Feedback comments</span><span class="d-value" style="white-space:pre-line;">{{ $a->feedback->comments }}</span></div>
+            @endif
         </div>
         <div>
             <div class="section-h" style="margin-top:0;">Payment</div>

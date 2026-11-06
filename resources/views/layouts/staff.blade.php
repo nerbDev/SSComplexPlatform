@@ -380,6 +380,7 @@
         <div class="nav-section-label">FIELD WORK</div>
         <nav class="nav">
             <a class="nav-item {{ request()->routeIs('staff.reports*') ? 'active' : '' }}" href="{{ route('staff.reports.index') }}"><span class="ic">🛠</span> Reports</a>
+            <a class="nav-item {{ request()->routeIs('staff.visitors*') ? 'active' : '' }}" href="{{ route('staff.visitors.index') }}"><span class="ic">🚪</span> Visitor Log</a>
             <a class="nav-item {{ request()->routeIs('staff.inventory*') ? 'active' : '' }}" href="{{ route('staff.inventory.index') }}"><span class="ic">📦</span> Inventory</a>
         </nav>
     </div>

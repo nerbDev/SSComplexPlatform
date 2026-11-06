@@ -27,6 +27,9 @@ use App\Http\Controllers\Staff\VerifyController;
 use App\Http\Controllers\Staff\AssignmentController as StaffAssignmentController;
 use App\Http\Controllers\Staff\ReportingController as StaffReportingController;
 use App\Http\Controllers\Staff\InventoryController as StaffInventoryController;
+use App\Http\Controllers\Staff\VisitorLogController as StaffVisitorLogController;
+use App\Http\Controllers\KioskController;
+use App\Http\Controllers\FeedbackController;
 
 // route to view admin dashboard
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -147,6 +150,9 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     Route::get('/appointments/{appointment}/reschedule/receipt-confirmation', [RescheduleController::class, 'receipt'])->name('appointments.reschedule.receipt');
     Route::post('/appointments/{appointment}/reschedule/receipt-confirmation', [RescheduleController::class, 'receiptStore'])->name('appointments.reschedule.receipt.store');
     Route::post('/appointments/{appointment}/reschedule/abandon', [RescheduleController::class, 'abandon'])->name('appointments.reschedule.abandon');
+
+    // "Give feedback" on a finished event: makes sure a personal feedback link exists, then opens it.
+    Route::get('/appointments/{appointment}/feedback', [FeedbackController::class, 'start'])->name('appointments.feedback');
 });
 
 
@@ -172,9 +178,23 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::post('/inventory', [StaffInventoryController::class, 'store'])->name('inventory.store');
     Route::put('/inventory/{item}', [StaffInventoryController::class, 'update'])->name('inventory.update');
     Route::post('/inventory/{item}/check', [StaffInventoryController::class, 'check'])->name('inventory.check');
+
+    // Visitor / user sign-in and sign-out per visit (feeds Sprint 12's peak-hours analytics).
+    Route::get('/visitors', [StaffVisitorLogController::class, 'index'])->name('visitors.index');
+    Route::post('/visitors', [StaffVisitorLogController::class, 'store'])->name('visitors.store');
+    Route::post('/visitors/signout-all', [StaffVisitorLogController::class, 'signOutAll'])->name('visitors.signout-all');
+    Route::post('/visitors/{visitor}/signout', [StaffVisitorLogController::class, 'signOut'])->name('visitors.signout');
 });
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+// Walk-in display monitor (lobby screen): public, read-only. Optional ?key= via SSC_KIOSK_KEY.
+Route::get('/display', [KioskController::class, 'index'])->name('kiosk.index');
+Route::get('/display/data', [KioskController::class, 'data'])->name('kiosk.data');
+
+// Post-event feedback: the token in the emailed link is the client's personal key (no login needed).
+Route::get('/feedback/{token}', [FeedbackController::class, 'show'])->name('feedback.show');
+Route::post('/feedback/{token}', [FeedbackController::class, 'store'])->middleware('throttle:20,1')->name('feedback.store');
 
 // route for login
 Route::get('/account', [AuthController::class, 'show'])->name('account.show');

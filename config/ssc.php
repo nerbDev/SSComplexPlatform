@@ -25,4 +25,25 @@ return [
         'sports_activity'    => ['label' => 'Sports & Activity Admin', 'icon' => '🏅'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Walk-in display monitor (kiosk) at /display
+    |--------------------------------------------------------------------------
+    | kiosk_key:  when set (SSC_KIOSK_KEY in .env) the monitor URL needs ?key=<value>.
+    | show_event_titles: false replaces event names on the public screen with "Reserved".
+    */
+    'kiosk_key'         => env('SSC_KIOSK_KEY'),
+    'kiosk_show_event_titles' => env('SSC_KIOSK_SHOW_TITLES', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Post-event feedback emails (php artisan feedback:send)
+    |--------------------------------------------------------------------------
+    */
+    'feedback' => [
+        'send_after_hours'   => 1,   // wait this long after the event ends before emailing
+        'reminder_after_days' => 3,  // one reminder if there's still no answer
+        'window_days'        => 14,  // stop sending for events older than this
+    ],
+
 ];
