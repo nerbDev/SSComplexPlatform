@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,9 @@ class AuthController extends Controller
         $credentials = $validator->validated();
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            // Audit trail: failed sign-in attempts (no user is logged in, so the entry has no user).
+            AuditLog::record('auth.login_failed', null, 'Failed sign-in attempt for ' . $credentials['email']);
+
             return back()
                 ->withErrors(['email' => 'Those credentials don\'t match our records.'], 'signin')
                 ->onlyInput('email')
@@ -51,6 +55,8 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+
+        AuditLog::record('auth.login', Auth::user(), 'Signed in as ' . Auth::user()->role . (Auth::user()->admin_type ? ' (' . Auth::user()->admin_type . ')' : ''));
 
         if (Auth::user()->role === 'admin') {
             return redirect()->route('admin.dashboard');
@@ -97,11 +103,17 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        AuditLog::record('auth.registered', $user, 'New client account registered');
+
         return redirect()->route('landing');
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        if (Auth::check()) {
+            AuditLog::record('auth.logout', Auth::user(), 'Signed out');
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

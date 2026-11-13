@@ -493,7 +493,8 @@
     <div class="nav-group">
         <div class="nav-section-label">INSIGHTS &amp; HELP</div>
         <nav class="nav">
-            <a class="nav-item"><span class="ic">◐</span> Analytics</a>
+            <a class="nav-item {{ request()->routeIs('admin.analytics*') ? 'active' : '' }}" href="{{ route('admin.analytics.index') }}"><span class="ic">◐</span> Analytics</a>
+            <a class="nav-item {{ request()->routeIs('admin.audit*') ? 'active' : '' }}" href="{{ route('admin.audit.index') }}"><span class="ic">🧾</span> Audit Trail</a>
             <a class="nav-item"><span class="ic">▤</span> Team Structure</a>
             <a class="nav-item"><span class="ic">▥</span> Reports <span class="badge">{{ $pendingReportsCount ?? 0 }}</span></a>
             <a class="nav-item"><span class="ic">◈</span> Support <span class="badge new">NEW</span></a>

@@ -56,4 +56,4 @@ class ApprovalFormController extends Controller
             ->route('client.dashboard')
             ->with('status', 'Approval form attached. Staff will review it next.');
     }
-}
+}   

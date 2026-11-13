@@ -37,6 +37,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Operating hours (used for utilization % in Facility Analytics)
+    |--------------------------------------------------------------------------
+    | Placeholder 8 AM – 8 PM until SSC confirms the real opening hours.
+    */
+    'operating_hours' => ['open' => 8, 'close' => 20],
+
+    /*
+    |--------------------------------------------------------------------------
     | Post-event feedback emails (php artisan feedback:send)
     |--------------------------------------------------------------------------
     */

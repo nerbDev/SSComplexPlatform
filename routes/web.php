@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\PosterController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Admin\AppointmentStaffController;
 use App\Http\Controllers\Admin\AdminTypeController;
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\AuditTrailController;
 use App\Http\Controllers\Admin\OperationBuilding\EventReportController;
 use App\Http\Controllers\Admin\OperationBuilding\DamagedItemController;
 use App\Http\Controllers\Admin\OperationBuilding\RefundController;
@@ -54,6 +56,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 // Admin focus-area switcher (sidebar dropdown): changes the logged-in admin's own admin_type.
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::post('/focus-area', [AdminTypeController::class, 'update'])->name('focus.switch');
+
+    // Sprint 12 — whole-facility analytics and the audit trail (both admin types).
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/export', [AnalyticsController::class, 'export'])->name('analytics.export');
+    Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('audit.index');
+    Route::get('/audit-trail/export', [AuditTrailController::class, 'export'])->name('audit.export');
 });
 
 // ---------------------------------------------------------------------------------------------
